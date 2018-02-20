@@ -32,14 +32,16 @@ import subprocess
 
 # Specify variables:
 stations_to_calculate_moment_for = ["SKR01", "SKR02", "SKR03", "SKR04", "SKR05", "SKR06", "SKR07"]
-mseed_filename = "mseed_data/20140629184210331.m"
+stations_not_to_process = ["SKG08", "SKG09", "SKG10", "SKG11", "SKG12", "SKG13", "GR01", "GR02", "GR03","GR04","BARD"]
+mseed_filename = "mseed_data/mseed_data_multi_events/20140619135945000.m"#"mseed_data/x.m"
 instruments_gain_filename = "instrument_gain_data.txt" # File with instrument name, instrument gains (Z,N,E) and digitaliser gains (Z,N,E)
 #station_coords_filename = 'input_data/ALLSTA_with_BARW.ssim' # Filename of array containing station name, latitude, longitude and altitude (altitude in km)
-NLLoc_event_hyp_filename = "NLLoc_data/loc.Tom__RunNLLoc000.20140629.184210.grid0.loc.hyp"
-MT_data_filename = "MT_data/20140629184210363MT.mat"
+NLLoc_event_hyp_filename = "NLLoc_data/NLLoc_data_multi_events/loc.Tom__RunNLLoc000.20140619.135945.grid0.loc.hyp" #"NLLoc_data/loc.Tom__RunNLLoc000.20140629.184210.grid0.loc.hyp"
+MT_data_filename = "MT_data/MT_data_multi_events/20140619135945526MT.mat" #"MT_data/20140629184210363MT.mat"
 density = 917. # Density of medium, in kg/m3
 Vp = 3630. # P-wave velocity in m/s
 Q = 150. # Quality factor for the medium
+verbosity_level = 1 # Verbosity level (1 for moment only) (2 for major parameters) (3 for plotting of traces)
 
 
 # ------------------- Define generally useful functions -------------------
@@ -217,13 +219,13 @@ def get_arrival_time_data_from_NLLoc_hyp_files(nlloc_hyp_filename):
     return arrival_times_dict
 
     
-def rotate_ZNE_to_LQT_axes(st, NLLoc_event_hyp_filename):
+def rotate_ZNE_to_LQT_axes(st, NLLoc_event_hyp_filename, stations_not_to_process=[]):
     '''Function to return rotated mssed stream, given st (=stream to rotate) and station_coords_array (= array of station coords to obtain back azimuth from).'''
         
     # Create new stream to store rotated data to:
     st_to_rotate = st.copy()
     st_rotated = obspy.core.stream.Stream()
-    statNamesProcessedList=[]
+    statNamesProcessedList=stations_not_to_process # Array containing station names not to process further
     
     # Get information from NLLoc file:
     arrival_times_dict = get_arrival_time_data_from_NLLoc_hyp_files(NLLoc_event_hyp_filename)
@@ -342,7 +344,14 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
     
     return long_period_spectral_level
     
-
+def get_P_arrival_time_at_station_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station):
+    """Function to get theta and phi, in terms of lower hemisphere plot, for calculating radiation pattern components in other functions. Takes in NLLoc hyp file and station name, and returns theta and phi spherical coords."""
+    # Get theta and phi in terms of lower hemisphere plot (as can get radiation pattern from lower or upper)
+    var = subprocess.check_output('grep "'+station+'" '+NLLoc_event_hyp_filename+' | grep "? P" | '+"awk '{print $7$8$9}'", shell=True)
+    P_arrival_time = UTCDateTime(var)
+    return P_arrival_time
+    
+    
 def get_theta_and_phi_for_stations_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station):
     """Function to get theta and phi, in terms of lower hemisphere plot, for calculating radiation pattern components in other functions. Takes in NLLoc hyp file and station name, and returns theta and phi spherical coords."""
     # Get theta and phi in terms of lower hemisphere plot (as can get radiation pattern from lower or upper)
@@ -415,49 +424,61 @@ if __name__ == "__main__":
     st_inst_resp_corrected = remove_instrument_response(st, instruments_gain_filename, instruments_poles_zeros_filename) # Note: NEED TO ADD DECONVOLUTION OF INST TRANSFER FUNC!!! (Although decided not to for this case, as majority of energy within flat response part of spectrum)
     
     # 2. Rotate trace into LQT:
-    st_inst_resp_corrected_rotated = rotate_ZNE_to_LQT_axes(st_inst_resp_corrected, NLLoc_event_hyp_filename)
-    
+    st_inst_resp_corrected_rotated = rotate_ZNE_to_LQT_axes(st_inst_resp_corrected, NLLoc_event_hyp_filename, stations_not_to_process)
+        
     # Define station to process for:
-    station = "SKR01"
-    print "Processing data for station:", station
+    #station = "SKR01"
+    for station in stations_to_calculate_moment_for:
+        print "Processing data for station:", station
+        # Check that station available and continue if not:
+        if len(st_inst_resp_corrected_rotated.select(station=station,component="L")) == 0:
+            continue
+        
+        # 3. Get displacement and therefroe long-period spectral level:
+        # Get and trim trace to approx. event only
+        tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] #, component="Z")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
+        # Trim trace:
+        P_arrival_time = get_P_arrival_time_at_station_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
+        starttime = P_arrival_time-0.004
+        tr.trim(starttime=starttime, endtime=starttime+0.2)
+        if verbosity_level>=3:
+            tr.plot()
+        # And get spectral level from trace:
+        long_period_spectral_level = get_displacement_integrated_over_time(tr)
+        if verbosity_level>=2:
+            print "Long period spectral level:", long_period_spectral_level
     
-    # 3. Get displacement and therefroe long-period spectral level:
-    # Get and trim trace to approx. event only
-    tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] #, component="Z")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
-    # Trim trace:
-    starttime = tr.stats.starttime+10.1
-    tr.trim(starttime=starttime, endtime=starttime+0.25)
-    # And get spectral level from trace:
-    long_period_spectral_level = get_displacement_integrated_over_time(tr)
-    print "Long period spectral level:", long_period_spectral_level
-    
-    # 4. Use event NonLinLoc solution to find theta and phi (for getting radiation pattern variation terms):
-    theta, phi = get_theta_and_phi_for_stations_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
+        # 4. Use event NonLinLoc solution to find theta and phi (for getting radiation pattern variation terms):
+        theta, phi = get_theta_and_phi_for_stations_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
 
-    # 5. Get normallised radiation pattern value for station (A(theta, phi, unit_matrix_M)):
-    A_rad_point = get_normallised_rad_pattern_point_amplitude(theta, phi, full_MT_max_prob)
-    print "Amplitude value A (normallised radiation pattern value):", A_rad_point
+        # 5. Get normallised radiation pattern value for station (A(theta, phi, unit_matrix_M)):
+        A_rad_point = get_normallised_rad_pattern_point_amplitude(theta, phi, full_MT_max_prob)
+        if verbosity_level>=2:
+            print "Amplitude value A (normallised radiation pattern value):", A_rad_point
     
-    # 6. Get distance to station, r:
-    r_km = get_event_hypocentre_station_distance(NLLoc_event_hyp_filename, station)
-    r_m = r_km*1000.
-    print "r (m):", r_m
+        # 6. Get distance to station, r:
+        r_km = get_event_hypocentre_station_distance(NLLoc_event_hyp_filename, station)
+        r_m = r_km*1000.
+        if verbosity_level>=2:
+            print "r (m):", r_m
     
-    # 7. Calculate constant, C:
-    C = calc_constant_C(density,Vp,r_m,A_rad_point)
+        # 7. Calculate constant, C:
+        C = calc_constant_C(density,Vp,r_m,A_rad_point)
     
-    # 8. Find attenuation factor:
-    # Take FFT to get peak frequency:
-    tr_data_freq_domain, freq = time_to_freq_domain_unnormallised(tr.data, tr.stats.sampling_rate)
-    f_peak_idx = np.argmax(tr_data_freq_domain)
-    f_peak = freq[f_peak_idx]
-    # And calculate attentuation factor:
-    atten_fact = calc_const_freq_atten_factor(f_peak,Q,Vp,r_m)
-    print "Attenuation factor (based upon constant frequency):", atten_fact
+        # 8. Find attenuation factor:
+        # Take FFT to get peak frequency:
+        tr_data_freq_domain, freq = time_to_freq_domain_unnormallised(tr.data, tr.stats.sampling_rate)
+        f_peak_idx = np.argmax(tr_data_freq_domain)
+        f_peak = freq[f_peak_idx]
+        # And calculate attentuation factor:
+        atten_fact = calc_const_freq_atten_factor(f_peak,Q,Vp,r_m)
+        if verbosity_level>=2:
+            print "Attenuation factor (based upon constant frequency):", atten_fact
     
-    # 9. Calculate sesimic moment:
-    seis_M_0 = C*long_period_spectral_level*atten_fact
-    print "M_0 (Nm):", seis_M_0
+        # 9. Calculate sesimic moment:
+        seis_M_0 = C*long_period_spectral_level*atten_fact
+        if verbosity_level>=1:
+            print "M_0 (Nm):", np.absolute(seis_M_0)
     
     print "Finished"
         
