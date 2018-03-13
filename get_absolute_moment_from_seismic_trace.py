@@ -4,6 +4,7 @@
 
 # Script Description:
 # Script to take unconstrained moment tensor inversion result (from MTFIT) and mseed data and calculate moment magnitude from specified stations.
+# The code currently relies on a moment tensor inversion of the event (for the radiation pattern) based on the output of MTFIT (see: https://djpugh.github.io/MTfit/)
 # Script returns moment magnitude as calculated at each station, as well as combined value with uncertainty estimate.
 
 # Input variables:
