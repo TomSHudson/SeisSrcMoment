@@ -33,11 +33,11 @@ import subprocess
 # Specify variables:
 stations_to_calculate_moment_for = ["SKR01", "SKR02", "SKR03", "SKR04", "SKR05", "SKR06", "SKR07"]
 stations_not_to_process = ["SKG08", "SKG09", "SKG10", "SKG11", "SKG12", "SKG13", "GR01", "GR02", "GR03","GR04","BARD"]
-mseed_filename = "mseed_data/mseed_data_multi_events/20140619135945000.m"#"mseed_data/x.m"
+mseed_filename = "mseed_data/mseed_data_multi_events/20140630110835000.m"#"mseed_data/x.m"
 instruments_gain_filename = "instrument_gain_data.txt" # File with instrument name, instrument gains (Z,N,E) and digitaliser gains (Z,N,E)
 #station_coords_filename = 'input_data/ALLSTA_with_BARW.ssim' # Filename of array containing station name, latitude, longitude and altitude (altitude in km)
-NLLoc_event_hyp_filename = "NLLoc_data/NLLoc_data_multi_events/loc.Tom__RunNLLoc000.20140619.135945.grid0.loc.hyp" #"NLLoc_data/loc.Tom__RunNLLoc000.20140629.184210.grid0.loc.hyp"
-MT_data_filename = "MT_data/MT_data_multi_events/20140619135945526MT.mat" #"MT_data/20140629184210363MT.mat"
+NLLoc_event_hyp_filename = "NLLoc_data/NLLoc_data_multi_events/loc.Tom__RunNLLoc000.20140630.110835.grid0.loc.hyp" #"NLLoc_data/loc.Tom__RunNLLoc000.20140629.184210.grid0.loc.hyp"
+MT_data_filename = "MT_data/MT_data_multi_events/20140629184210363MT.mat" #20140626052830496MT.mat" #20140630110835303MT.mat" #"MT_data/20140629184210363MT.mat"
 density = 917. # Density of medium, in kg/m3
 Vp = 3630. # P-wave velocity in m/s
 Q = 150. # Quality factor for the medium
