@@ -298,6 +298,7 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
     x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
     y_data = tr_displacement # Displacement data
     tr_displacement_area_with_time = numerically_integrate(x_data, y_data)
+    tr_displacement_area_with_time = np.abs(tr_displacement_area_with_time) # And take the absolute values, to account for any negative overall displacement
     
     # And take FFT of displacement:
     tr_displacement_data_freq_domain, freq_displacement = time_to_freq_domain_unnormallised(tr_displacement, tr.stats.sampling_rate)
