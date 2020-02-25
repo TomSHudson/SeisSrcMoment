@@ -1,0 +1,9 @@
+README.md
+setup.cfg
+setup.py
+SeisSrcMoment/__init__.py
+SeisSrcMoment/moment.py
+SeisSrcMoment.egg-info/PKG-INFO
+SeisSrcMoment.egg-info/SOURCES.txt
+SeisSrcMoment.egg-info/dependency_links.txt
+SeisSrcMoment.egg-info/top_level.txt

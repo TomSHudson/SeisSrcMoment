@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: SeisSrcMoment
+Version: 0.0.1
+Summary: A package for calculating the seismic moment of an earthquake using a time domain approximation of the spectral method.
+Home-page: https://github.com/TomSHudson/SeisSrcMoment/
+Author: Tom Hudson
+Author-email: thomas.hudson@earth.ox.ac.uk
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
