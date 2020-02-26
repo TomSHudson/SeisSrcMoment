@@ -272,8 +272,9 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
     #tr_displacement_area_with_time = np.abs(tr_displacement_area_with_time) # And take the absolute values, to account for any negative overall displacement
     
     # And take FFT of displacement:
-    tr_displacement_data_freq_domain, freq_displacement = time_to_freq_domain_unnormallised(tr_displacement, tr.stats.sampling_rate)
-    
+    freq_displacement, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate) 
+    tr_displacement_data_freq_domain = np.sqrt(Pxx)
+
     # And get maximum displacement integrated with time (To find spectral level):
     long_period_spectral_level = np.max(tr_displacement_area_with_time)
     
@@ -499,6 +500,10 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     if verbosity_level>=1:
         print("Average seismic moment for event:", av_seis_M_0, "+/-", std_err_seis_M_0)
 
+    # Clean up:
+    del st_inst_resp_corrected_rotated, st_inst_resp_corrected, st
+    gc.collect()
+
     return av_seis_M_0, std_err_seis_M_0
     
 
@@ -522,8 +527,6 @@ if __name__ == "__main__":
     # verbosity_level = 1 # Verbosity level (1 for moment only) (2 for major parameters) (3 for plotting of traces)
     # plot_switch = False
 
-
-    
     mseed_filename = "/Users/eart0504/data/mseed/Uturuncu/XP_network/2010/131/*.m"
     inventory_fname = "/Users/eart0504/data/mseed/Uturuncu/XP_network/dataless/IRISDMC-Plutons_dataless.dataless"  # The inventory fname, pointing to the dataless file for the network
     instruments_gain_filename = None
