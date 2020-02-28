@@ -33,6 +33,8 @@ from obspy import UTCDateTime as UTCDateTime
 import subprocess
 import gc
 from NonLinLocPy import read_nonlinloc # For reading NonLinLoc data (can install via pip)
+from scipy.optimize import curve_fit 
+from mtspec import mtspec # For multi-taper spectral analysis
 
 
 # ------------------- Define generally useful functions -------------------
@@ -146,6 +148,13 @@ def numerically_integrate(x_data, y_data):
         int_y_data[i] = int_y_data[i-1] + np.average(np.array(y_data[i-1],y_data[i+1]))*(x_data[i+1] - x_data[i-1])/2. # Calculates half area under point beyond and before it and sums to previous value
     int_y_data[-1] = int_y_data[-2] # And set final value
     return int_y_data
+
+
+def Brune_model(f, Sigma_0, f_c, t_star):
+    """Brune source model. Uses t_star = travel-time/Q.
+    For further details see: Brune1970, Stork2014."""
+    Sigma = Sigma_0 * np.exp(-np.pi * f * t_star) / ( 1. + ((f / f_c)**2) )
+    return Sigma
     
 
 def remove_instrument_response(st, inventory_fname=None, instruments_gain_filename=None, pre_filt=None):
@@ -222,9 +231,9 @@ def rotate_ZNE_to_LQT_axes(st, NLLoc_event_hyp_filename, stations_not_to_process
     '''Function to return rotated mssed stream, given st (=stream to rotate) and station_coords_array (= array of station coords to obtain back azimuth from).'''
         
     # Create new stream to store rotated data to:
-    st_to_rotate = st.copy()
+    st_to_rotate = st
     st_rotated = obspy.core.stream.Stream()
-    statNamesProcessedList = stations_not_to_process # Array containing station names not to process further
+    statNamesProcessedList = stations_not_to_process.copy() # Array containing station names not to process further
     
     # Get information from NLLoc file:
     nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename)
@@ -308,11 +317,13 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
     if plot_switch:
         fig, axes = plt.subplots(nrows=2, ncols=2)
         axes[0,0].plot(freq[1:], tr_data_freq_domain[1:])
+        axes[0,0].set_xscale("log", nonposx='clip')
+        axes[0,0].set_yscale("log", nonposy='clip')
         axes[0,0].set_xlabel("Frequency (Hz)")
         axes[0,0].set_ylabel("Amplitude (m/s/Hz)")
         axes[0,0].set_title("Velocity spectrum")
-        axes[0,1].plot(x_data, tr_displacement/np.max(tr_displacement), label="Displacement")
-        axes[0,1].plot(x_data, tr.data/np.max(tr.data), label="Velocity")
+        axes[0,1].plot(x_data, tr_displacement/np.max(np.abs(tr_displacement)), label="Displacement")
+        axes[0,1].plot(x_data, tr.data/np.max(np.abs(tr.data)), label="Velocity")
         axes[0,1].set_xlabel("Time (s)")
         axes[0,1].set_ylabel("Amplitude (normallised)")
         axes[0,1].set_title("Comparison of velocity and displacement")
@@ -320,6 +331,8 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
         freq_displacement, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate)
         tr_displacement_data_freq_domain = np.sqrt(Pxx)
         axes[1,0].plot(freq_displacement[1:], tr_displacement_data_freq_domain[1:])
+        axes[1,0].set_xscale("log", nonposx='clip')
+        axes[1,0].set_yscale("log", nonposy='clip')
         axes[1,0].set_xlabel("Frequency (Hz)")
         axes[1,0].set_ylabel("Amplitude (m/Hz)")
         axes[1,0].set_title("Displacement spectrum")
@@ -330,6 +343,81 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
         plt.show()
     
     return long_period_spectral_level
+
+
+def get_displacement_spectra_coeffs(tr, plot_switch=False):
+    """Function to get long-period spectral level, for calculating moment. Also finds the corner frequency and 
+    travel-time / Q. Takes trace of component L as input, which has had the instrument response corrected and 
+    been rotated such that the trace is alligned with the P wave arrival direction."""
+    
+    # Take FFT to get peak frequency:
+    freq, Pxx = periodogram(tr.data, fs=tr.stats.sampling_rate)
+    tr_data_freq_domain = np.sqrt(Pxx)
+
+    peak_freq_idx = np.argmax(tr_data_freq_domain)
+    peak_freq = freq[peak_freq_idx]
+    
+    # Integrate trace to get displacement:
+    x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
+    y_data = tr.data # Velocity data
+    tr_displacement = numerically_integrate(x_data, y_data)
+    
+    # Get spectra of displacement (using multi-taper spectral analysis method):
+    # (See: Thomson1982, Park1987, Prieto2009, Pozgay2009a for further details)
+    Pxx, freq_displacement = mtspec(tr_displacement, delta=1./tr.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+    disp_spect_amp = np.sqrt(Pxx)
+
+    # And fit Brune model:
+    param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
+    Sigma_0 = param[0]
+    f_c =  param[1]
+    t_star = param[2] # t_star = 
+    Brune_model_spect_amp_fit = Brune_model(freq_displacement[1:], Sigma_0, f_c, t_star)
+    
+    # And plot some figures if specified:
+    if plot_switch:
+        # Print fitting parameters:
+        print("Sigma_0:", Sigma_0, "f_c:", f_c, "t_star:", t_star)
+        # And take FFT of displacement:
+        # (Note: for comparison only)
+        freq_displacement2, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate) 
+        tr_displacement_data_freq_domain = np.sqrt(Pxx)
+        # Integrate displacement to get the long period spectral level (total displacement*time):
+        # (Note: Only used for plotting purposes, for comparision)
+        x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
+        y_data = np.abs(tr_displacement) # Absolute displacement data (Note: Absolute so that obtains area under displacement rather than just indefinite integral, to account for any negative overall displacement)
+        tr_displacement_area_with_time = numerically_integrate(x_data, y_data)
+        # And plot data:        
+        fig, axes = plt.subplots(nrows=2, ncols=2)
+        axes[0,0].plot(freq[1:], tr_data_freq_domain[1:])
+        axes[0,0].set_xscale("log", nonposx='clip')
+        axes[0,0].set_yscale("log", nonposy='clip')
+        axes[0,0].set_xlabel("Frequency (Hz)")
+        axes[0,0].set_ylabel("Amplitude (m/s/Hz)")
+        axes[0,0].set_title("Velocity spectrum")
+        axes[0,1].plot(x_data, tr_displacement/np.max(np.abs(tr_displacement)), label="Displacement")
+        axes[0,1].plot(x_data, tr.data/np.max(np.abs(tr.data)), label="Velocity")
+        axes[0,1].set_xlabel("Time (s)")
+        axes[0,1].set_ylabel("Amplitude (normallised)")
+        axes[0,1].set_title("Comparison of velocity and displacement")
+        # And take FFT of displacement:
+        freq_displacement, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate)
+        tr_displacement_data_freq_domain = np.sqrt(Pxx)
+        axes[1,0].plot(freq_displacement2[1:], tr_displacement_data_freq_domain[1:])
+        axes[1,0].plot(freq_displacement[1:], disp_spect_amp[1:], c='r')
+        axes[1,0].plot(freq_displacement[1:], Brune_model_spect_amp_fit, c='g')
+        axes[1,0].set_xscale("log", nonposx='clip')
+        axes[1,0].set_yscale("log", nonposy='clip')
+        axes[1,0].set_xlabel("Frequency (Hz)")
+        axes[1,0].set_ylabel("Amplitude (m/Hz)")
+        axes[1,0].set_title("Displacement spectrum")
+        axes[1,1].plot(x_data, tr_displacement_area_with_time)
+        axes[1,1].set_xlabel("Time (s)")
+        axes[1,1].set_ylabel("Integrated displacement (m . s)")
+        axes[1,1].set_title("Integrated dispacement")
+        plt.show()
+    
+    return Sigma_0, f_c, t_star
 
 
     
@@ -396,7 +484,7 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
     return atten_fact
 
 
-def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., st=None, verbosity_level=0, plot_switch=False):
+def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., st=None, use_full_spectral_method=True, verbosity_level=0, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009.
     Arguments:
     Required:
@@ -422,8 +510,11 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     surf_inc_angle_rad - The angle of incidence (in radians) of the ray with the surface used for the free surface correction. A good approximation (default) 
     is to set to zero. If the instruments are not at the free surface, set this to pi/2. (float)
     st - Obspy stream to process. If this is specified, the parameter mseed_filename will be ignored and this stream used instead. Default is None. (obspy Stream object)
+    use_full_spectral_method - If use_full_spectral_method=True, uses a full spectral method, fitting multi-tapered spectra for the long-period displacement level, 
+                                corner frequency, and travel-time / Q. If this is used, Q will be set from the fitted value rather than from the user input value. Otherwise, 
+                                will use a time-domain method to find area under displacement of phase arrival only. (default is True) (bool)
     verbosity_level - Verbosity level of output. 1 for moment only, 2 for major parameters, 3 for plotting of traces. (defualt = 0) (int)
-    
+    plot_switch - Switches on plotting of analysis if True. Default is False (bool)
     Returns:
     seis_M_0 - The seismic moment in Nm (float)
     """
@@ -453,12 +544,21 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     else:
         print("Warning: Need to specify MT_six_tensor or MT_data_filename for accurate radiation pattern correction. \n Using average radiation pattern value instead.")
 
+    # Setup some data outputs:
+    event_obs_dict = {}
+    event_obs_dict["M_0"] = []
+    if use_full_spectral_method:
+        event_obs_dict["Sigma_0"] = []
+        event_obs_dict["f_c"] = []
+        event_obs_dict["t_star"] = []
+        event_obs_dict["Q"] = []
+
     # 1. Correct for instrument response:
     st_inst_resp_corrected = remove_instrument_response(st, inventory_fname, instruments_gain_filename) # Note: Only corrects for full instrument response if inventory_fname is specified
 
     # 2. Rotate trace into LQT:
     st_inst_resp_corrected_rotated = rotate_ZNE_to_LQT_axes(st_inst_resp_corrected, NLLoc_event_hyp_filename, stations_not_to_process)
-        
+
     # Define station to process for:
     seis_M_0_all_stations = [] # For appending results for each station to
     for station in stations_to_calculate_moment_for:
@@ -468,7 +568,13 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         if len(st_inst_resp_corrected_rotated.select(station=station,component="L")) == 0:
             continue
         
-        # 3. Get displacement and therefroe long-period spectral level:
+        # 3. Get distance to station, r:
+        r_km = get_event_hypocentre_station_distance(NLLoc_event_hyp_filename, station)
+        r_m = r_km*1000.
+        if verbosity_level>=2:
+            print("r (m):", r_m)
+
+        # 4. Get displacement and therefroe long-period spectral level:
         # Get and trim trace to approx. event only
         tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] #, component="Z")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
         # Trim trace:
@@ -482,14 +588,23 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         if verbosity_level>=3:
             tr.plot()
         # And get spectral level from trace:
-        long_period_spectral_level = get_displacement_integrated_over_time(tr, plot_switch=plot_switch)
-        if verbosity_level>=2:
-            print("Long period spectral level:", long_period_spectral_level)
+        if use_full_spectral_method:
+            Sigma_0, f_c, t_star = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
+            long_period_spectral_level = Sigma_0
+            approx_travel_time = r_m / Vp
+            Q = np.abs(approx_travel_time / t_star)
+            if verbosity_level>=2:
+                print("Spectral method fitted parameters:", "Sigma_0 =", Sigma_0, ", f_c = ", f_c, ", travel-time / Q = ", t_star, "Approx. Q = ", Q)
+        else:
+            long_period_spectral_level = get_displacement_integrated_over_time(tr, plot_switch=plot_switch)
+            if verbosity_level>=2:
+                print("Long period spectral level:", long_period_spectral_level)
+        
     
-        # 4. Use event NonLinLoc solution to find theta and phi (for getting radiation pattern variation terms):
+        # 5. Use event NonLinLoc solution to find theta and phi (for getting radiation pattern variation terms):
         theta, phi = get_theta_and_phi_for_stations_from_NLLoc_event_hyp_data(nonlinloc_hyp_file_data, station)
 
-        # 5. Get normallised radiation pattern value for station (A(theta, phi, unit_matrix_M)):
+        # 6. Get normallised radiation pattern value for station (A(theta, phi, unit_matrix_M)):
         if MT_data_filename or len(MT_six_tensor)>0:
             A_rad_point = get_normallised_rad_pattern_point_amplitude(theta, phi, full_MT_max_prob)
         else:
@@ -502,12 +617,6 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
                 sys.exit()
         if verbosity_level>=2:
             print("Amplitude value A (normallised radiation pattern value):", A_rad_point)
-    
-        # 6. Get distance to station, r:
-        r_km = get_event_hypocentre_station_distance(NLLoc_event_hyp_filename, station)
-        r_m = r_km*1000.
-        if verbosity_level>=2:
-            print("r (m):", r_m)
     
         # 7. Calculate constant, C:
         C = calc_constant_C(density,Vp,r_m,A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad)
@@ -528,6 +637,13 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         if verbosity_level>=1:
             print("Overall seismic moment (Nm):", seis_M_0)
         seis_M_0_all_stations.append(seis_M_0)
+        # and write data:
+        event_obs_dict['M_0'].append(seis_M_0)
+        if use_full_spectral_method:
+            event_obs_dict['Sigma_0'].append(Sigma_0)
+            event_obs_dict['f_c'].append(f_c)
+            event_obs_dict['t_star'].append(t_star)
+            event_obs_dict['Q'].append(Q)
 
     # 10. Get overall average seismic moment and associated uncertainty:
     seis_M_0_all_stations = np.array(seis_M_0_all_stations)
@@ -542,7 +658,7 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     del st_inst_resp_corrected_rotated, st_inst_resp_corrected, st
     gc.collect()
 
-    return av_seis_M_0, std_err_seis_M_0, n_obs
+    return av_seis_M_0, std_err_seis_M_0, n_obs, event_obs_dict
     
 
 # ------------------- Main script for running -------------------
