@@ -70,6 +70,28 @@ def load_mseed(mseed_filename, filt_freqs=[]):
     return st
 
 
+def force_stream_sample_alignment(st):
+    """Function to force alignment if samples are out by less than a sample."""
+    for i in range(1, len(st)):
+        if np.abs(st[i].stats.starttime - st[0].stats.starttime) <= 1./st[i].stats.sampling_rate:
+            st[i].stats.starttime = st[0].stats.starttime # Shift the start time so that all traces are alligned.
+            # if st[i].stats.sampling_rate == st[0].stats.sampling_rate:
+            #     st[i].stats.sampling_rate = st[0].stats.sampling_rate 
+    return st
+
+
+def check_st_n_samp(st):
+    """Function to check number of samples."""
+    min_n_samp = len(st[0].data)
+    for i in range(len(st)):
+        if len(st[i].data) < min_n_samp:
+            min_n_samp = len(st[i].data)
+    for i in range(len(st)):
+        if len(st[i].data) > min_n_samp:
+            st[i].data = st[i].data[0:min_n_samp]
+    return st
+
+
 def relabel_one_and_two_channels_with_N_E(st):
     """Function to relabel channel ??1 and ??2 labels as ??N and ??E.
     Note: This is not a formal correction, just a relabelling procedure."""
@@ -230,7 +252,11 @@ def rotate_ZNE_to_LQT_axes(st, NLLoc_event_hyp_filename, stations_not_to_process
                     station_current_azimuth_sta_to_event = 180. - (360. - station_current_azimuth_event_to_sta)
                 elif station_current_azimuth_event_to_sta <= 180.:
                     station_current_azimuth_sta_to_event = 360. - (180. - station_current_azimuth_event_to_sta)
-                station_current_toa_sta_inclination = 180. - station_current_toa_event_to_sta
+                if station_current_toa_event_to_sta > 180.:
+                    station_current_toa_sta_inclination = station_current_toa_event_to_sta - 180.
+                elif station_current_toa_event_to_sta <= 180:
+                    station_current_toa_sta_inclination = 180. - station_current_toa_event_to_sta
+                
                 stat_event_back_azimuth = station_current_azimuth_sta_to_event
                 stat_event_inclination = station_current_toa_sta_inclination
 
@@ -370,7 +396,7 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
     return atten_fact
 
 
-def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., verbosity_level=0, plot_switch=False):
+def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., st=None, verbosity_level=0, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009.
     Arguments:
     Required:
@@ -395,6 +421,7 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     Average values are 0.44 for P and 0.6 for S (Stork et al 2014) (str)
     surf_inc_angle_rad - The angle of incidence (in radians) of the ray with the surface used for the free surface correction. A good approximation (default) 
     is to set to zero. If the instruments are not at the free surface, set this to pi/2. (float)
+    st - Obspy stream to process. If this is specified, the parameter mseed_filename will be ignored and this stream used instead. Default is None. (obspy Stream object)
     verbosity_level - Verbosity level of output. 1 for moment only, 2 for major parameters, 3 for plotting of traces. (defualt = 0) (int)
     
     Returns:
@@ -405,12 +432,16 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     # Import nonlinloc data:
     nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename)
     # Import mseed data:
-    st = load_mseed(mseed_filename, filt_freqs)
+    if not st:
+        st = load_mseed(mseed_filename, filt_freqs)
     # Check if any components are labelled ??1 or ??2, and relabel N and E just for magnitude processing (for rotation below):
     st = relabel_one_and_two_channels_with_N_E(st)
     # Try and trim the stream to a smaller size (if using database mseed):
     origin_time = nonlinloc_hyp_file_data.origin_time
     st.trim(starttime=origin_time - 10.0, endtime=origin_time + 80.0)
+    # And force allignment of traces (if out by less than 1 sample):
+    st = force_stream_sample_alignment(st)
+    st = check_st_n_samp(st)
     # Import MT data:
     if MT_data_filename:
         uid, MTp, MTs, stations = load_MT_dict_from_file(MT_data_filename)
@@ -424,7 +455,7 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
 
     # 1. Correct for instrument response:
     st_inst_resp_corrected = remove_instrument_response(st, inventory_fname, instruments_gain_filename) # Note: Only corrects for full instrument response if inventory_fname is specified
-    
+
     # 2. Rotate trace into LQT:
     st_inst_resp_corrected_rotated = rotate_ZNE_to_LQT_axes(st_inst_resp_corrected, NLLoc_event_hyp_filename, stations_not_to_process)
         
@@ -441,7 +472,12 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         # Get and trim trace to approx. event only
         tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] #, component="Z")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
         # Trim trace:
-        P_arrival_time = nonlinloc_hyp_file_data.phase_data[station]['P']['arrival_time'] #get_P_arrival_time_at_station_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
+        try:
+            P_arrival_time = nonlinloc_hyp_file_data.phase_data[station]['P']['arrival_time'] #get_P_arrival_time_at_station_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
+        except KeyError:
+            if verbosity_level > 0:
+                print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
+            continue
         tr.trim(starttime=P_arrival_time-window_before_after[0], endtime=P_arrival_time+window_before_after[1]).detrend('demean')
         if verbosity_level>=3:
             tr.plot()
@@ -496,7 +532,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     # 10. Get overall average seismic moment and associated uncertainty:
     seis_M_0_all_stations = np.array(seis_M_0_all_stations)
     av_seis_M_0 = np.mean(seis_M_0_all_stations)
-    std_err_seis_M_0 = np.std(seis_M_0_all_stations)/np.sqrt(len(seis_M_0_all_stations))
+    n_obs = len(seis_M_0_all_stations)
+    std_err_seis_M_0 = np.std(seis_M_0_all_stations)/np.sqrt(n_obs)
+    
     if verbosity_level>=1:
         print("Average seismic moment for event:", av_seis_M_0, "+/-", std_err_seis_M_0)
 
@@ -504,7 +542,7 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     del st_inst_resp_corrected_rotated, st_inst_resp_corrected, st
     gc.collect()
 
-    return av_seis_M_0, std_err_seis_M_0
+    return av_seis_M_0, std_err_seis_M_0, n_obs
     
 
 # ------------------- Main script for running -------------------
@@ -544,7 +582,7 @@ if __name__ == "__main__":
 
 
     # Get seismic moment:
-    seis_moment, seis_moment_std_err = calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=inventory_fname, instruments_gain_filename=instruments_gain_filename, Q=Q, window_before_after=window_before_after, filt_freqs=filt_freqs, stations_not_to_process=stations_not_to_process, MT_six_tensor=MT_six_tensor, verbosity_level=verbosity_level, plot_switch=plot_switch)
+    seis_moment, seis_moment_std_err, n_obs = calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=inventory_fname, instruments_gain_filename=instruments_gain_filename, Q=Q, window_before_after=window_before_after, filt_freqs=filt_freqs, stations_not_to_process=stations_not_to_process, MT_six_tensor=MT_six_tensor, verbosity_level=verbosity_level, plot_switch=plot_switch)
 
     print("Finished")
         
