@@ -353,9 +353,6 @@ def get_displacement_spectra_coeffs(tr, plot_switch=False):
     # Take FFT to get peak frequency:
     freq, Pxx = periodogram(tr.data, fs=tr.stats.sampling_rate)
     tr_data_freq_domain = np.sqrt(Pxx)
-
-    peak_freq_idx = np.argmax(tr_data_freq_domain)
-    peak_freq = freq[peak_freq_idx]
     
     # Integrate trace to get displacement:
     x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
@@ -587,6 +584,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         tr.trim(starttime=P_arrival_time-window_before_after[0], endtime=P_arrival_time+window_before_after[1]).detrend('demean')
         if verbosity_level>=3:
             tr.plot()
+        # Check if there is no data in trace after trimming:
+        if len(tr.data) == 0:
+            continue
         # And get spectral level from trace:
         if use_full_spectral_method:
             Sigma_0, f_c, t_star = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
