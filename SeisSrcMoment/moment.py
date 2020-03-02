@@ -543,12 +543,6 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
 
     # Setup some data outputs:
     event_obs_dict = {}
-    event_obs_dict["M_0"] = []
-    if use_full_spectral_method:
-        event_obs_dict["Sigma_0"] = []
-        event_obs_dict["f_c"] = []
-        event_obs_dict["t_star"] = []
-        event_obs_dict["Q"] = []
 
     # 1. Correct for instrument response:
     st_inst_resp_corrected = remove_instrument_response(st, inventory_fname, instruments_gain_filename) # Note: Only corrects for full instrument response if inventory_fname is specified
@@ -638,12 +632,13 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             print("Overall seismic moment (Nm):", seis_M_0)
         seis_M_0_all_stations.append(seis_M_0)
         # and write data:
-        event_obs_dict['M_0'].append(seis_M_0)
+        event_obs_dict[station] = {}
+        event_obs_dict[station]['M_0'] = seis_M_0
         if use_full_spectral_method:
-            event_obs_dict['Sigma_0'].append(Sigma_0)
-            event_obs_dict['f_c'].append(f_c)
-            event_obs_dict['t_star'].append(t_star)
-            event_obs_dict['Q'].append(Q)
+            event_obs_dict[station]['Sigma_0'] = Sigma_0
+            event_obs_dict[station]['f_c'] = f_c
+            event_obs_dict[station]['t_star'] = t_star
+            event_obs_dict[station]['Q'] = Q
 
     # 10. Get overall average seismic moment and associated uncertainty:
     seis_M_0_all_stations = np.array(seis_M_0_all_stations)
