@@ -368,8 +368,11 @@ def get_displacement_spectra_coeffs(tr, plot_switch=False):
     param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
     Sigma_0 = param[0]
     f_c =  param[1]
-    t_star = param[2] # t_star = 
+    t_star = param[2]
     Brune_model_spect_amp_fit = Brune_model(freq_displacement[1:], Sigma_0, f_c, t_star)
+    Sigma_0_stdev = np.sqrt(param_cov[0,0])
+    f_c_stdev = np.sqrt(param_cov[1,1])
+    t_star_stdev = np.sqrt(param_cov[2,2])
     
     # And plot some figures if specified:
     if plot_switch:
@@ -414,7 +417,7 @@ def get_displacement_spectra_coeffs(tr, plot_switch=False):
         axes[1,1].set_title("Integrated dispacement")
         plt.show()
     
-    return Sigma_0, f_c, t_star
+    return Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev
 
 
     
@@ -583,10 +586,11 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             continue
         # And get spectral level from trace:
         if use_full_spectral_method:
-            Sigma_0, f_c, t_star = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
+            Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
             long_period_spectral_level = Sigma_0
             approx_travel_time = r_m / Vp
             Q = np.abs(approx_travel_time / t_star)
+            Q_stdev = np.abs(approx_travel_time / t_star_stdev)
             if verbosity_level>=2:
                 print("Spectral method fitted parameters:", "Sigma_0 =", Sigma_0, ", f_c = ", f_c, ", travel-time / Q = ", t_star, "Approx. Q = ", Q)
         else:
@@ -639,6 +643,10 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             event_obs_dict[station]['f_c'] = f_c
             event_obs_dict[station]['t_star'] = t_star
             event_obs_dict[station]['Q'] = Q
+            event_obs_dict[station]['Sigma_0_stdev'] = Sigma_0_stdev
+            event_obs_dict[station]['f_c_stdev'] = f_c_stdev
+            event_obs_dict[station]['t_star_stdev'] = t_star_stdev
+            event_obs_dict[station]['Q_stdev'] = Q_stdev
 
     # 10. Get overall average seismic moment and associated uncertainty:
     seis_M_0_all_stations = np.array(seis_M_0_all_stations)
