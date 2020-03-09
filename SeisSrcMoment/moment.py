@@ -624,6 +624,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         tr.trim(starttime=P_arrival_time-window_before_after[0], endtime=P_arrival_time+window_before_after[1]).detrend('demean')
         if remove_noise_spectrum:
             tr_noise.trim(starttime=P_arrival_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=P_arrival_time-window_before_after[0]).detrend('demean')
+            if len(tr_noise) > len(tr):
+                tr_noise.data = tr_noise.data[0:len(tr)]
+
         if verbosity_level>=3:
             tr.plot()
         # Check if there is no data in trace after trimming:
