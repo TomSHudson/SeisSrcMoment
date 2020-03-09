@@ -345,10 +345,11 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
     return long_period_spectral_level
 
 
-def get_displacement_spectra_coeffs(tr, plot_switch=False):
+def get_displacement_spectra_coeffs(tr, tr_noise=None, plot_switch=False):
     """Function to get long-period spectral level, for calculating moment. Also finds the corner frequency and 
     travel-time / Q. Takes trace of component L as input, which has had the instrument response corrected and 
-    been rotated such that the trace is alligned with the P wave arrival direction."""
+    been rotated such that the trace is alligned with the P wave arrival direction.
+    If tr_noise is specified, will remove noise from specified tr_noise window from signal."""
     
     # Take FFT to get peak frequency:
     freq, Pxx = periodogram(tr.data, fs=tr.stats.sampling_rate)
@@ -358,11 +359,45 @@ def get_displacement_spectra_coeffs(tr, plot_switch=False):
     x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
     y_data = tr.data # Velocity data
     tr_displacement = numerically_integrate(x_data, y_data)
+    # And detrend displacement data:
+    tr_disp_tmp = tr.copy()
+    tr_disp_tmp.data = tr_displacement
+    tr_disp_tmp.detrend('demean')
+    tr_displacement = tr_disp_tmp.data
+    del tr_disp_tmp
+    gc.collect()
     
     # Get spectra of displacement (using multi-taper spectral analysis method):
     # (See: Thomson1982, Park1987, Prieto2009, Pozgay2009a for further details)
     Pxx, freq_displacement = mtspec(tr_displacement, delta=1./tr.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
     disp_spect_amp = np.sqrt(Pxx)
+
+    # Remove noise, if tr_noise specified:
+    if tr_noise:
+        if len(tr_noise.data) == len(tr.data):
+            # Integrate noise trace to get displacement:
+            x_data_noise = np.arange(0.0,len(tr_noise.data)/tr_noise.stats.sampling_rate,1./tr_noise.stats.sampling_rate) # Get time data
+            y_data_noise = tr_noise.data # Velocity data
+            tr_displacement_noise = numerically_integrate(x_data_noise, y_data_noise)
+            # And detrend displacement noise data:
+            tr_disp_tmp = tr.copy()
+            tr_disp_tmp.data = tr_displacement_noise
+            tr_disp_tmp.detrend('demean')
+            tr_displacement_noise = tr_disp_tmp.data
+            del tr_disp_tmp
+            gc.collect()
+            # And get noise spectrum:
+            Pxx_noise, freq_displacement_noise = mtspec(tr_displacement_noise, delta=1./tr_noise.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+            disp_spect_amp_noise = np.sqrt(Pxx_noise)
+            # And remove noise spectrum:
+            disp_spect_amp_no_noise = disp_spect_amp - disp_spect_amp_noise
+            disp_spect_amp_no_noise[disp_spect_amp_no_noise<0.] = 0.
+            # And replace original displacement spectrum with noise corrected one:
+            disp_spect_amp_before_corr = disp_spect_amp.copy()
+            disp_spect_amp = disp_spect_amp_no_noise
+        else:
+            print("Error: Noise trace must be same length as data trace. Exiting.")
+            sys.exit()
 
     # And fit Brune model:
     param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
@@ -406,6 +441,10 @@ def get_displacement_spectra_coeffs(tr, plot_switch=False):
         axes[1,0].plot(freq_displacement2[1:], tr_displacement_data_freq_domain[1:])
         axes[1,0].plot(freq_displacement[1:], disp_spect_amp[1:], c='r')
         axes[1,0].plot(freq_displacement[1:], Brune_model_spect_amp_fit, c='g')
+        if tr_noise:
+            axes[1,0].plot(freq_displacement[1:], disp_spect_amp_no_noise[1:], c='k')
+            axes[1,0].plot(freq_displacement[1:], disp_spect_amp_before_corr[1:], c='r')
+            
         axes[1,0].set_xscale("log", nonposx='clip')
         axes[1,0].set_yscale("log", nonposy='clip')
         axes[1,0].set_xlabel("Frequency (Hz)")
@@ -484,7 +523,7 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
     return atten_fact
 
 
-def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., st=None, use_full_spectral_method=True, verbosity_level=0, plot_switch=False):
+def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., st=None, use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009.
     Arguments:
     Required:
@@ -513,6 +552,8 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     use_full_spectral_method - If use_full_spectral_method=True, uses a full spectral method, fitting multi-tapered spectra for the long-period displacement level, 
                                 corner frequency, and travel-time / Q. If this is used, Q will be set from the fitted value rather than from the user input value. Otherwise, 
                                 will use a time-domain method to find area under displacement of phase arrival only. (default is True) (bool)
+    remove_noise_spectrum - If remove_noise_spectrum is set to True, will remove noise spectrum of window directly before trace from signal. Only available if 
+                            use_full_spectral_method is set to True. (Default = False) (bool)
     verbosity_level - Verbosity level of output. 1 for moment only, 2 for major parameters, 3 for plotting of traces. (defualt = 0) (int)
     plot_switch - Switches on plotting of analysis if True. Default is False (bool)
     Returns:
@@ -571,6 +612,8 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         # 4. Get displacement and therefroe long-period spectral level:
         # Get and trim trace to approx. event only
         tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] #, component="Z")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
+        if remove_noise_spectrum:
+            tr_noise = tr.copy()
         # Trim trace:
         try:
             P_arrival_time = nonlinloc_hyp_file_data.phase_data[station]['P']['arrival_time'] #get_P_arrival_time_at_station_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
@@ -579,6 +622,8 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
                 print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
             continue
         tr.trim(starttime=P_arrival_time-window_before_after[0], endtime=P_arrival_time+window_before_after[1]).detrend('demean')
+        if remove_noise_spectrum:
+            tr_noise.trim(starttime=P_arrival_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=P_arrival_time-window_before_after[0]).detrend('demean')
         if verbosity_level>=3:
             tr.plot()
         # Check if there is no data in trace after trimming:
@@ -586,7 +631,12 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             continue
         # And get spectral level from trace:
         if use_full_spectral_method:
-            Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
+            if remove_noise_spectrum:
+                Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr, tr_noise=tr_noise, plot_switch=plot_switch)
+                del tr_noise
+                gc.collect()
+            else:
+                Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
             long_period_spectral_level = Sigma_0
             approx_travel_time = r_m / Vp
             Q = np.abs(approx_travel_time / t_star)
