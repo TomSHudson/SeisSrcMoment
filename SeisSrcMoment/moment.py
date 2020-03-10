@@ -636,7 +636,10 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             tr_noise.trim(starttime=P_arrival_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=P_arrival_time-window_before_after[0]).detrend('demean')
             if len(tr_noise) > len(tr):
                 tr_noise.data = tr_noise.data[0:len(tr)]
-
+            if not len(tr_noise.data) == len(tr.data):
+                print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
+                continue
+            
         if verbosity_level>=3:
             tr.plot()
         # Check if there is no data in trace after trimming:
