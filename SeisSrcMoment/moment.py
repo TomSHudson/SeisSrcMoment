@@ -622,6 +622,10 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
                 print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
             continue
         tr.trim(starttime=P_arrival_time-window_before_after[0], endtime=P_arrival_time+window_before_after[1]).detrend('demean')
+        if len(tr) == 0:
+            if verbosity_level > 0:
+                print("Cannot find sufficient data for station:",station,"therefore skipping this station.")
+            continue
         if remove_noise_spectrum:
             tr_noise.trim(starttime=P_arrival_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=P_arrival_time-window_before_after[0]).detrend('demean')
             if len(tr_noise) > len(tr):
