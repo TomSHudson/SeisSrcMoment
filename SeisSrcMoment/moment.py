@@ -730,44 +730,4 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     return av_seis_M_0, std_err_seis_M_0, n_obs, event_obs_dict
     
 
-# ------------------- Main script for running -------------------
-if __name__ == "__main__":
-
-    # # Specify variables:
-    # stations_to_calculate_moment_for = ["SKR01", "SKR02", "SKR03", "SKR04", "SKR05", "SKR06", "SKR07"]
-    # stations_not_to_process = ["SKG08", "SKG09", "SKG10", "SKG11", "SKG12", "SKG13", "GR01", "GR02", "GR03","GR04","BARD"]
-    # mseed_filename = "data/mseed_data/20140629184210331.m"
-    # inventory_fname = None
-    # instruments_gain_filename = "data/instrument_gain_data.txt" # File with instrument name, instrument gains (Z,N,E) and digitaliser gains (Z,N,E)
-    # NLLoc_event_hyp_filename = "data/NLLoc_data/loc.Tom__RunNLLoc000.20140629.184210.grid0.loc.hyp"
-    # window_before_after = [0.004, 0.196] # The time before and after the phase pick to use for calculating the magnitude within
-    # filt_freqs = []
-    # # MT_data_filename = "data/MT_data/20140629184210363MT.mat"
-    # MT_six_tensor = np.array([1.,1.,1.,0.,0.,0.])
-    # density = 917. # Density of medium, in kg/m3
-    # Vp = 3630. # P-wave velocity in m/s
-    # Q = 150. # Quality factor for the medium
-    # verbosity_level = 1 # Verbosity level (1 for moment only) (2 for major parameters) (3 for plotting of traces)
-    # plot_switch = False
-
-    mseed_filename = "/Users/eart0504/data/mseed/Uturuncu/XP_network/2010/131/*.m"
-    inventory_fname = "/Users/eart0504/data/mseed/Uturuncu/XP_network/dataless/IRISDMC-Plutons_dataless.dataless"  # The inventory fname, pointing to the dataless file for the network
-    instruments_gain_filename = None
-    NLLoc_event_hyp_filename = "/Users/eart0504/nonlinloc/loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20100511.013132.grid0.loc.hyp"
-    stations_to_calculate_moment_for = list(read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename).phase_data.keys()) # ["PLSM", "PLLO", "PLLA", "PL03"]
-    stations_not_to_process = []
-    window_before_after = [0.0, 0.5] # The time before and after the phase pick to use for calculating the magnitude within
-    filt_freqs = [0.5, 49.0]
-    MT_six_tensor = []
-    density = 2000. # Density of medium, in kg/m3
-    Vp = 5000. # P-wave velocity in m/s
-    Q = 50. # Quality factor for the medium
-    verbosity_level = 1 # Verbosity level (1 for moment only) (2 for major parameters) (3 for plotting of traces)
-    plot_switch = True
-
-
-    # Get seismic moment:
-    seis_moment, seis_moment_std_err, n_obs = calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=inventory_fname, instruments_gain_filename=instruments_gain_filename, Q=Q, window_before_after=window_before_after, filt_freqs=filt_freqs, stations_not_to_process=stations_not_to_process, MT_six_tensor=MT_six_tensor, verbosity_level=verbosity_level, plot_switch=plot_switch)
-
-    print("Finished")
         
