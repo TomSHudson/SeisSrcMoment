@@ -212,6 +212,10 @@ def remove_instrument_response(st, inventory_fname=None, instruments_gain_filena
     else:
         print("Error: No inventory_fname or instruments_gain_filename provided, therefore cannot correct for instrument response. Exiting.")
         sys.exit()
+    
+    # And tidy:
+    del st
+    gc.collect()
         
     return st_out
 
@@ -519,7 +523,7 @@ def calc_constant_C(rho, alpha, r_m, A_rad_point, surf_inc_angle_rad=0.):
     # Get constant
     C = 4 * np.pi * rho * (alpha**3) * r_m / A_rad_point
     # Correct for free surface effect
-    C = C / 2. * np.cos(surf_inc_angle_rad)
+    C = C / (2. * np.cos(surf_inc_angle_rad))
     return C
 
 
