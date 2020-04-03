@@ -533,7 +533,9 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
     return atten_fact
 
 
-def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, inventory_fname=None, instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], no_MT_phase='P', surf_inc_angle_rad=0., st=None, use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, plot_switch=False):
+def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
+                window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], surf_inc_angle_rad=0., st=None, 
+                use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009.
     Arguments:
     Required:
@@ -544,6 +546,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     Vp - The velocity of the medium at teh source (could be P or S phase velocity) (float)
     Note: Must also specify one of inventory_fname or instruments_gain_filename (see optional args for more info)
     Optional:
+    phase_to_process - Phase to process (P or S). If P, will use P picks on L component. If S, will use S picks on T component only. If no moment tensor 
+                        information is specified, will use average radiation pattern values for the phase specified here (either P or S). Average values are 0.44 
+                        for P and 0.6 for S (Stork et al 2014) (str)
     inventory_fname - Filename of a .dataless file containing the network instrument info (dataless information), for correcting for instrument response (str)
     instruments_gain_filename - Filenmae of a text file containing the instrument gains, with the columns: [Station instrument_gain(Z N E) digitaliser_gain(Z N E)].
                                 Not required if specified inventory_fname. Note: Will not correct for the gains if instruments_gain_filename is specified. (str)
@@ -554,8 +559,6 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     stations_not_to_process - List of station names not to process (list of strs)
     MT_data_filename - Filename of the moment tensor inversion output, in MTFit format. If None, will use specified MT_six_tensor instead (default = None) (str)
     MT_six_tensor - 6 moment tensor to use if MT_data_filename not specified.
-    no_MT_phase - If no moment tensor information is specified, will use average radiation pattern values for the phase specified here (either P or S). 
-    Average values are 0.44 for P and 0.6 for S (Stork et al 2014) (str)
     surf_inc_angle_rad - The angle of incidence (in radians) of the ray with the surface used for the free surface correction. A good approximation (default) 
     is to set to zero. If the instruments are not at the free surface, set this to pi/2. (float)
     st - Obspy stream to process. If this is specified, the parameter mseed_filename will be ignored and this stream used instead. Default is None. (obspy Stream object)
@@ -598,6 +601,11 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     # Setup some data outputs:
     event_obs_dict = {}
 
+    # Perform initial tests on input parameters:
+    if (phase_to_process != 'P') and (phase_to_process != 'S'):
+        print("Error: phase_to_process = ", phase_to_process, "not recognised. Please specify either P or S. Exiting.")
+        sys.exit()
+
     # 1. Correct for instrument response:
     st_inst_resp_corrected = remove_instrument_response(st, inventory_fname, instruments_gain_filename) # Note: Only corrects for full instrument response if inventory_fname is specified
 
@@ -621,23 +629,27 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
 
         # 4. Get displacement and therefroe long-period spectral level:
         # Get and trim trace to approx. event only
-        tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] #, component="Z")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
+        if phase_to_process == 'P':
+            tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
+        elif phase_to_process == 'S':
+            tr = st_inst_resp_corrected_rotated.select(station=station, component="T")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL S!!!
         if remove_noise_spectrum:
             tr_noise = tr.copy()
         # Trim trace:
         try:
-            P_arrival_time = nonlinloc_hyp_file_data.phase_data[station]['P']['arrival_time'] #get_P_arrival_time_at_station_from_NLLoc_event_hyp_file(NLLoc_event_hyp_filename, station)
+            phase_arrival_time = nonlinloc_hyp_file_data.phase_data[station][phase_to_process]['arrival_time']
         except KeyError:
             if verbosity_level > 0:
                 print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
             continue
-        tr.trim(starttime=P_arrival_time-window_before_after[0], endtime=P_arrival_time+window_before_after[1]).detrend('demean')
+        tr.trim(starttime=phase_arrival_time-window_before_after[0], endtime=phase_arrival_time+window_before_after[1]).detrend('demean')
         if len(tr) == 0:
             if verbosity_level > 0:
                 print("Cannot find sufficient data for station:",station,"therefore skipping this station.")
             continue
         if remove_noise_spectrum:
-            tr_noise.trim(starttime=P_arrival_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=P_arrival_time-window_before_after[0]).detrend('demean')
+            event_origin_time = nonlinloc_hyp_file_data.origin_time
+            tr_noise.trim(starttime=event_origin_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=event_origin_time-window_before_after[0]).detrend('demean')
             if len(tr_noise) > len(tr):
                 tr_noise.data = tr_noise.data[0:len(tr)]
             if not len(tr_noise.data) == len(tr.data):
@@ -676,12 +688,12 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         if MT_data_filename or len(MT_six_tensor)>0:
             A_rad_point = get_normallised_rad_pattern_point_amplitude(theta, phi, full_MT_max_prob)
         else:
-            if no_MT_phase == 'P':
+            if phase_to_process == 'P':
                 A_rad_point = 0.44
-            elif no_MT_phase == 'S':
+            elif phase_to_process == 'S':
                 A_rad_point = 0.6
             else:
-                print("Error: No moment tensor info specified and cannot recognise no_MT_phase: "+no_MT_phase+" therefore exiting.")
+                print("Error: No moment tensor info specified and cannot recognise phase_to_process: "+phase_to_process+" therefore exiting.")
                 sys.exit()
         if verbosity_level>=2:
             print("Amplitude value A (normallised radiation pattern value):", A_rad_point)
