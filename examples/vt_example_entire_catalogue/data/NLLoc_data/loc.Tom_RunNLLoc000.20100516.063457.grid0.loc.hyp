@@ -1,0 +1,30 @@
+NLLOC "./loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20100516.063457.grid0" "LOCATED" "Location completed."
+SIGNATURE "Tom Hudson, University of Oxford   obs:obs/Uturuncu_XP_run002/20100516063454720000.nonlinloc   NLLoc:v7.00.00(27Oct2017)  run:27Feb2020 11h52m37"
+COMMENT "Control"
+GRID  240 240 121  -60 -60 -6.5  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 200000 smallestNodeSide 0.046680/0.046680/0.059082 oct_tree_integral 2.280418e+01 scatter_volume 2.280418e+01
+HYPOCENTER  x -3.5876 y 0.566895 z 0.501221  OT 54.5627  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2010 05 16  06 34 54.562697  Lat -22.264877 Long -67.194808 Depth 0.501221
+QUALITY  Pmax 4.76284e+17 MFmin 9.53484 MFmax 10.5995 RMS 0.0602549 Nphs 9 Gap 116.635 Dist 14.1332 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio 1.73657  Npair 3  Diff 2.5871
+STATISTICS  ExpectX -3.57691 Y 0.542687 Z 0.0839158  CovXX 0.730335 XY 0.330347 XZ 0.695206 YY 0.524301 YZ -0.0943981 ZZ 14.0649 EllAz1  142.183 Dip1  -2.07827 Len1  0.964567 Az2  232.105 Dip2  2.1432 Len2  1.83557 Len3  7.055373e+00
+STAT_GEOG  ExpectLat -22.265095 Long -67.194704 Depth 0.083916
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -22.270000  LongOrig -67.160000  FirstStdParal -22.280000  SecondStdParal -22.260000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 10  usedPhCt 9  assocStaCt -1  usedStaCt 6  depthPhCt -1  stdErr 0.0602549  azGap 116.635  secAzGap 193.379  gtLevel -  minDist 14.1332 maxDist 33.2587 medDist 21.1276
+QML_OriginUncertainty  horUnc -1  minHorUnc 0.80433  maxHorUnc 1.49623  azMaxHorUnc 53.6599
+QML_ConfidenceEllipsoid  semiMajorAxisLength 7.05537  semiMinorAxisLength 0.964567  semiIntermediateAxisLength 1.83557  majorAxisPlunge 87.0139  majorAxisAzimuth 96.2635  majorAxisRotation 44.275
+FOCALMECH  Hyp  -22.264877 -67.194808 0.501221 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+PLLO   ?    ?    ? P      ? 20100516 0634   57.3371 GAU  3.25e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    2.7823   -0.0078    1.2412    8.3136   -7.0560   -4.5790   14.1332 122.64 122.6 108.5  9     0.0000
+PLLO   ?    ?    ? S      ? 20100516 0634   59.4245 GAU  3.36e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    4.8083    0.0535    1.0521    8.3136   -7.0560   -4.5790   14.1332 122.64 122.6 106.9  9     0.0000
+PLSM   ?    ?    ? P      ? 20100516 0634   58.2063 GAU  3.51e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    3.6544   -0.0108    1.1686  -12.8358   17.3797   -4.2160   19.1885 331.19 331.2 102.5  9     0.0000
+PLLA   ?    ?    ? P      ? 20100516 0634   58.3264 GAU  3.14e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    3.7577    0.0060    1.1628  -22.6264   -4.7336   -4.2420   19.7629 254.44 254.4 102.1  9     0.0000
+PLTM   ?    ?    ? P      ? 20100516 0634   58.8421 GAU  3.99e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    4.2668    0.0126    1.1116   -0.7327   22.8774   -4.7028   22.4924   7.29   7.3 101.6  9     0.0000
+PLTM   ?    ?    ? S      ? 20100516 0635    2.0860 GAU  2.89e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    7.3727    0.1506    0.8054   -0.7327   22.8774   -4.7028   22.4924   7.29   7.3  99.0  9     0.0000
+PLRR   ?    ?    ? P      ? 20100516 0635    0.4602 GAU  3.08e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    6.0159   -0.1184    0.8970   28.6536    0.9591   -4.4805   32.2436  89.30  89.3  96.6  9     0.0000
+PLAR   ?    ?    ? P      ? 20100516 0635    0.7842 GAU  4.52e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    6.2068    0.0147    0.9347   18.7497  -24.0743   -4.6320   33.2587 137.81 137.8  96.4  9     0.0000
+PLAR   ?    ?    ? S      ? 20100516 0635    5.4586 GAU  3.05e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   10.7149    0.1810    0.6266   18.7497  -24.0743   -4.6320   33.2587 137.81 137.8  93.6  9     0.0000
+PL03   ?    ?    ? P      ? 20100516 0635    1.3159 GAU  2.50e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   22.1889   28.1546   -4.6285    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC
+
