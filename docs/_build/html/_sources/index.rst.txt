@@ -32,5 +32,6 @@ Contents:
    :numbered:
    :maxdepth: 2
    
-   introduction
+   contents
    installation
+   tutorials

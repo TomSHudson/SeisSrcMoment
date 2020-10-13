@@ -1,6 +1,11 @@
 # Initial setup:
 Go to readthedocs getting started tutorial
 
+for using jup notebooks, do:
+conda install nbsphinx
+and add 'nbsphinx' to conf.py extensions
+add ipynb files to index.rst toctree (or another toctree)
+
 # To build current docs:
 make html
 

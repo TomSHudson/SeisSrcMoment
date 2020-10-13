@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>1. Installation &mdash; SeisSrcMoment 0.0.2 documentation</title>
+  <title>2. Installation &mdash; SeisSrcMoment 0.0.2 documentation</title>
   
 
   
@@ -30,13 +30,17 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="SeisSrcMoment Documentation" href="index.html" /> 
+    <link rel="next" title="Tutorials" href="tutorials.html" />
+    <link rel="prev" title="1. Contents" href="contents.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,16 +89,18 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#prerequisites">1.1. Prerequisites</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installing">1.2. Installing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#manual-install-from-source">1.2.1. Manual install from source</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pip-install">1.2.2. pip install</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#conda-install">1.2.3. conda install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">1. Contents</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">2.1. Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing">2.2. Installing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#manual-install-from-source">2.2.1. Manual install from source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pip-install">2.2.2. pip install</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conda-install">2.2.3. conda install</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 </ul>
 
             
@@ -141,7 +147,7 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">1. </span>Installation</li>
+      <li><span class="section-number">2. </span>Installation</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -160,32 +166,56 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installation">
-<h1><span class="section-number">1. </span>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="installation">
+<h1><span class="section-number">2. </span>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>SeisSrcMoment can currently be installed via PyPi (pip install SeisSrcMoment) or a manual install. For the most stable version, select PyPi, for the most up to date versionm select a manual install.</p>
 <div class="section" id="prerequisites">
-<h2><span class="section-number">1.1. </span>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">2.1. </span>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <p>The package has the following dependencies:</p>
 <p>TBC!!!</p>
 </div>
 <div class="section" id="installing">
-<h2><span class="section-number">1.2. </span>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">2.2. </span>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="manual-install-from-source">
-<h3><span class="section-number">1.2.1. </span>Manual install from source<a class="headerlink" href="#manual-install-from-source" title="Permalink to this headline">¶</a></h3>
+<h3><span class="section-number">2.2.1. </span>Manual install from source<a class="headerlink" href="#manual-install-from-source" title="Permalink to this headline">¶</a></h3>
 <p>Download or clone the package from <a href="https://github.com/TomSHudson/SeisSrcMoment" target="_blank">github</a>, and install by:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python setup.py install
 </pre></div>
 </div>
 </div>
 <div class="section" id="pip-install">
-<h3><span class="section-number">1.2.2. </span>pip install<a class="headerlink" href="#pip-install" title="Permalink to this headline">¶</a></h3>
+<h3><span class="section-number">2.2.2. </span>pip install<a class="headerlink" href="#pip-install" title="Permalink to this headline">¶</a></h3>
 <p>We will be linking the package to PyPi soon, after which you can use the following command to install the package:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install QMigrate
 </pre></div>
 </div>
 </div>
 <div class="section" id="conda-install">
-<h3><span class="section-number">1.2.3. </span>conda install<a class="headerlink" href="#conda-install" title="Permalink to this headline">¶</a></h3>
+<h3><span class="section-number">2.2.3. </span>conda install<a class="headerlink" href="#conda-install" title="Permalink to this headline">¶</a></h3>
 <p>We will soon endevour to support installation via conda.</p>
 </div>
 </div>
@@ -199,8 +229,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="index.html" class="btn btn-neutral float-left" title="SeisSrcMoment Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="contents.html" class="btn btn-neutral float-left" title="1. Contents" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

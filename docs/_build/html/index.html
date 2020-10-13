@@ -30,13 +30,16 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="1. Installation" href="installation.html" /> 
+    <link rel="next" title="1. Contents" href="contents.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,7 +88,9 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">1. Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 </ul>
 
             
@@ -151,7 +156,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="figure align-center" style="width: 50%">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="figure align-center" style="width: 50%">
 <a class="reference internal image-reference" href="_images/SeisSrcMoment_logo.png"><img alt="SeisSrcMoment: a Python package for earthquake moment and magnitude analysis." src="_images/SeisSrcMoment_logo.png" style="width: 90%;" /></a>
 </div>
 <div class="section" id="seissrcmoment-documentation">
@@ -168,9 +197,16 @@
 <h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">1.1. Prerequisites</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#installing">1.2. Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">1. Contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">2. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">2.1. Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing">2.2. Installing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/icequake_example_time_domain/icequake_example_time_domain.html">1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/vt_example_frequency_domain/vt_example_frequency_domain.html">2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/vt_example_entire_catalogue/vt_example_entire_catalogue.html">3. Example of processing moment magnitudes for an entire earthqauke catalogue</a></li>
 </ul>
 </li>
 </ul>
@@ -186,7 +222,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="1. Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contents.html" class="btn btn-neutral float-right" title="1. Contents" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
