@@ -1,0 +1,6 @@
+# Initial setup:
+Go to readthedocs getting started tutorial
+
+# To build current docs:
+make html
+
