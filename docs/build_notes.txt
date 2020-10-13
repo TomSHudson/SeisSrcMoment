@@ -5,6 +5,7 @@ for using jup notebooks, do:
 conda install nbsphinx
 and add 'nbsphinx' to conf.py extensions
 add ipynb files to index.rst toctree (or another toctree)
+and add to requirements.txt and add the path to that file to readthedocs project (https://nbsphinx.readthedocs.io/en/0.3.3/usage.html#Automatic-Creation-of-HTML-and-PDF-output-on-readthedocs.org)
 
 # To build current docs:
 make html
