@@ -130,7 +130,7 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
         stations_to_calculate_moment_for = list(nonlinloc_event_hyp_data.phase_data.keys())
         
         # 2. Get stream to pass to calc_moment:
-        mseed_filename = mseed_dir+"/"+str(event_origin_time.year).zfill(4)+"/"+str(event_origin_time.julday).zfill(3)+"/*.m" #2010/131/*.m"
+        mseed_filename = mseed_dir+"/"+str(event_origin_time.year).zfill(4)+"/"+str(event_origin_time.julday).zfill(3)+"/*.m"
         st = obspy.core.Stream()
         for fname in glob.glob(mseed_filename):
             try:
@@ -495,7 +495,7 @@ def sort_nonlinloc_fnames_into_chrono_order(nonlinloc_fnames):
     return nonlinloc_fnames_time_sorted
 
 
-def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_dict, min_eq_samp_size=50, max_eq_samp_size=1000, number_of_eq_samp_windows=100, Q_filt=1000, upper_Mw_filt=4.0):
+def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_dict, min_eq_samp_size=50, max_eq_samp_size=1000, number_of_eq_samp_windows=100, Q_filt=1000, upper_Mw_filt=4.0, return_Mcs=False):
     """Function to calculate b-values through time using the probabilistic method of Roberts et al (2016).
     Note: Must input event fnames (nonlinloc_fnames_time_sorted) in chronological order!"""
     # 1. Filter events by upper cuttof magnitude and Q_filt:
@@ -534,9 +534,10 @@ def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_
         print("Warning: number_of_eq_samp_windows not divisible by two, so output number of window results is going to be of different shape.")
     
     # 3. Calculate b-values and b-values errors for all eq sample windows:
-    b_values_all_windows = [] #np.zeros(len(eq_samp_window_sizes))
-    b_values_errs_all_windows = [] #np.zeros(len(eq_samp_window_sizes))
+    b_values_all_windows = [] 
+    b_values_errs_all_windows = [] 
     b_values_associated_times_all_windows = []
+    Mc_all_windows = []
     # Loop over eq sample windows:
     for i in range(len(eq_samp_window_sizes)):
         if i % 1000 == 0:
@@ -568,25 +569,33 @@ def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_
         b_values_all_windows.append(b)
         b_values_errs_all_windows.append(b_err)
         b_values_associated_times_all_windows.append(av_event_time.datetime)
+        Mc_all_windows.append(Mw_c)
 
     # And rename data out:
     event_times = b_values_associated_times_all_windows
     b_values_through_time = b_values_all_windows
     b_values_errs_through_time = b_values_errs_all_windows    
+    Mc_through_time = Mc_all_windows
     
     # 4. Sort data into ascending order:
     event_times_sorted = sorted(event_times)
     b_values_through_time_sorted = np.zeros(len(b_values_through_time))
     b_values_errs_through_time_sorted = np.zeros(len(b_values_errs_through_time))
+    Mc_through_time_sorted = np.zeros(len(Mc_through_time))
     for i in range(len(event_times_sorted)):
         curr_idx = event_times.index(event_times_sorted[i])
         b_values_through_time_sorted[i] = b_values_through_time[curr_idx]
         b_values_errs_through_time_sorted[i] = b_values_errs_through_time[curr_idx]
+        Mc_through_time_sorted[i] = Mc_through_time[curr_idx]
     event_times = event_times_sorted
     b_values_through_time = b_values_through_time_sorted
     b_values_errs_through_time = b_values_errs_through_time_sorted
+    Mc_through_time = Mc_through_time_sorted
     
-    return event_times, b_values_through_time, b_values_errs_through_time
+    if return_Mcs:
+        return event_times, b_values_through_time, b_values_errs_through_time, Mc_through_time
+    else:
+        return event_times, b_values_through_time, b_values_errs_through_time
 
 
 def gauss_func(x, mu, sigma):
@@ -684,3 +693,104 @@ def plot_temporal_b_values(time_labels, b_value_labels, b_value_time_array, fig_
         print('Saved figure to:', fig_fname)
     return fig
 
+
+def find_noise_long_period_spectral_level_through_time(mseed_archive_dir, starttime, endtime, inventory_fname=None, daily_sample_hr=12, secs_to_sample=0.7, comp_to_use='Z', stations_not_to_use=[], out_fname=''):
+    """Function to find noise long period spectral level through time.
+    Note that the sampling starts at 1 minute past the chosen hour.
+    Note that events still could occur within the noise window. This function does not deal with this,
+    so bare it in minde when analysing the data output.
+    Arguments:
+    Required:
+    mseed_archive_dir - The path to the mseed archive dir containing continuous mseed data for the time period.
+                        Note that currently archive must be in archive/year/julday/*<component (Z,N,E,1,2,etc)>.m
+                        format. (str)
+    starttime - The start time of the period to process data for. (obspy UTCDateTime object)
+    endtime - The end time of the period to process data for. (obspy UTCDateTime object)
+    Optional:
+    inventory_fname - The inventory filename (.dataless) that contains the instrument response data for the 
+                        network. Default is None. (str)
+    daily_sample_hr - The hour of the day to sample the data for, in UTC time. Note that the sampling actually
+                        starts at 1 minute past this hour. Default is 12. (int)
+    secs_to_sample - The duration of the window to calculate the noise spectrum over, in seconds. Note that 
+                    secs_to_sample should be the same length as that used for the magnitudes analysis for which
+                    this data is being compared to (so that the frequency bins match). Default is 0.7 s.
+                    (float)
+    comp_to_use - Seismic trace component to use. Selects this component using the filename in the mseed archive.
+                    Therefore, only use a component label that exists in the archive. Default is Z. (str)
+    stations_not_to_use - A list of stations not to process. Default is []. (list of strs)
+    out_fname - The filename of the file to save the data to (as a python dict). Note that if it is not specified
+                (i.e. empty string) then it will not save data out. Default is not to save data out. (str)
+
+    Returns:
+    time_labels - List of datetime objects labelling each noise level measurement. (list of python datetime objects)
+    noise_LP_spectral_levels - The long-period spectral level of the noise. Units of noise_LP_spectral_levels are
+                             m / Hz. (np array of floats)
+    (will also return python dict to out_fname if out_fname specified).
+    
+    """
+    # Loop over days from starttime to endtime:
+    num_days = int((endtime - starttime) / (3600 * 24))
+    noise_LP_spectral_levels = []
+    time_labels = []
+    for day in np.arange(num_days):
+        # Get noise sample start time:
+        noise_sample_starttime_curr = starttime + (day * 3600 * 24)
+        noise_sample_starttime_curr = obspy.UTCDateTime(year=noise_sample_starttime_curr.year, month=noise_sample_starttime_curr.month, day=noise_sample_starttime_curr.day, hour=daily_sample_hr, minute=1, second=0)
+
+        # Get stream:
+        mseed_filename = os.path.join(mseed_archive_dir, str(noise_sample_starttime_curr.year).zfill(4), str(noise_sample_starttime_curr.julday).zfill(3), "*"+comp_to_use+".m")
+        st = obspy.core.Stream()
+        for fname in glob.glob(mseed_filename):
+            try:
+                st_tmp = obspy.read(fname).detrend('demean').trim(starttime=noise_sample_starttime_curr-60., endtime=noise_sample_starttime_curr+9.*60.) # Note that takes 10 minute window around data interested in (so that can remove instrument response correctly)
+            except TypeError:
+                continue
+            if len(st_tmp) > 0:
+                if st_tmp[0].stats.station in stations_not_to_use:
+                    continue # Skip reading this stream if the station should not be used
+            for i in range(len(st_tmp)):
+                try:
+                    st.append(st_tmp[i])
+                    del st_tmp
+                    gc.collect()
+                except UnboundLocalError:
+                    continue      
+        # And check if obtaind data:
+        if len(st) == 0:
+            print('Found no data for year: ', noise_sample_starttime_curr.year, ' day: ', noise_sample_starttime_curr.julday, 'Therefore skipping day.')
+            continue
+
+        # Remove instrument response:
+        st_instrument_resp_removed = moment.remove_instrument_response(st, inventory_fname=inventory_fname)
+
+        # And trim data again to exact window to use:
+        st_instrument_resp_removed.trim(starttime=noise_sample_starttime_curr, endtime=noise_sample_starttime_curr+secs_to_sample)
+        
+        # Calculate noise spectrum:
+        Sigma_0s_curr = []
+        for tr in st_instrument_resp_removed:
+            Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = moment.get_displacement_spectra_coeffs(tr)
+            Sigma_0s_curr.append(Sigma_0)
+        av_Sigma_0_curr = np.average(np.array(Sigma_0s_curr))
+
+        # And append to data stores:
+        noise_LP_spectral_levels.append(av_Sigma_0_curr)
+        time_labels.append(noise_sample_starttime_curr.datetime)
+    
+    # And do any final processing:
+    noise_LP_spectral_levels = np.array(noise_LP_spectral_levels)
+
+    # And save data to file, if specified:
+    if len(out_fname) > 0:
+        LP_noise_spect_level_outdict = {}
+        LP_noise_spect_level_outdict['noise_LP_spectral_levels'] = noise_LP_spectral_levels
+        LP_noise_spect_level_outdict['time_labels'] = time_labels
+        outfile = open(out_fname, 'wb')
+        pickle.dump(LP_noise_spect_level_outdict, outfile)
+        outfile.close()
+
+    return time_labels, noise_LP_spectral_levels
+
+
+
+        
