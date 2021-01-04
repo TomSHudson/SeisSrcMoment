@@ -497,6 +497,9 @@ def sort_nonlinloc_fnames_into_chrono_order(nonlinloc_fnames):
 
 def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_dict, min_eq_samp_size=50, max_eq_samp_size=1000, number_of_eq_samp_windows=100, Q_filt=1000, upper_Mw_filt=4.0, return_Mcs=False):
     """Function to calculate b-values through time using the probabilistic method of Roberts et al (2016).
+    Deviates slightly from this method in that it first allocates windows through time one way, then when 
+    it reaches the end of the time series, it reverses, so as to provide approximately unbiased sampling 
+    through the entire time series. It repeats this for the number of windows, number_of_eq_samp_windows.
     Note: Must input event fnames (nonlinloc_fnames_time_sorted) in chronological order!"""
     # 1. Filter events by upper cuttof magnitude and Q_filt:
     nonlinloc_fnames_time_sorted_filtered = []
@@ -534,6 +537,8 @@ def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_
         print("Warning: number_of_eq_samp_windows not divisible by two, so output number of window results is going to be of different shape.")
     
     # 3. Calculate b-values and b-values errors for all eq sample windows:
+    # (Note that now the window assignment bounces back and forth between two ends of time series,
+    # to minimise sampling bias for main body of data)
     b_values_all_windows = [] 
     b_values_errs_all_windows = [] 
     b_values_associated_times_all_windows = []
@@ -542,30 +547,51 @@ def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_
     for i in range(len(eq_samp_window_sizes)):
         if i % 1000 == 0:
             print('Processing for eq samp window:', i, '/', len(eq_samp_window_sizes))
-        # Specify current window start idx:
-        eq_samp_window_size_curr = eq_samp_window_sizes[i]
-        random_win_start_idx = np.random.randint(0, high=total_filtered_event_num - eq_samp_window_size_curr)
-        if total_filtered_event_num == eq_samp_window_size_curr:
-            random_win_start_idx = 0
         
-        # Get magnitudes associated with the eq sample window:
-        Mws_current_window = Mws_filtered[random_win_start_idx:random_win_start_idx + eq_samp_window_size_curr]
+        # 3.a. Specify current window start idx:
+        # (note bounce back along time series window assignment, as stated above):
+        if i == 0:
+            random_win_start_idx = i # Starts at beginning of time series
+            prog_foward = True # To progress forward in time initially
+        else:
+            # Check if still stepping forward in time:
+            if prog_foward == True:
+                win_end_idx = random_win_start_idx + eq_samp_window_sizes[i-1] + eq_samp_window_sizes[i]
+                if win_end_idx >= total_filtered_event_num:
+                    prog_foward = False # Bounce back, reversing window in time
+                    random_win_start_idx = total_filtered_event_num # Reset win start idx accordingly
+            else:
+                win_end_idx = random_win_start_idx - eq_samp_window_sizes[i] #(eq_samp_window_sizes[i-1] + eq_samp_window_sizes[i])
+                if win_end_idx < 0:
+                    prog_foward = True # Bounce back, reversing window in time to be forwards again
+                    random_win_start_idx = 0 - eq_samp_window_sizes[i-1] # Reset win start idx accordingly (to make zero after stepping forward in time)
+            # If stepping forward in time:
+            if prog_foward: 
+                random_win_start_idx = random_win_start_idx + eq_samp_window_sizes[i-1] # Finds next window start idx
+            else:
+                random_win_start_idx = random_win_start_idx - eq_samp_window_sizes[i] # Finds next window start idx, if reveresed in time
+            # And if window length is same length as entire window:
+            if total_filtered_event_num == eq_samp_window_sizes[i]:
+                random_win_start_idx = 0
+                
+        # 3.b. Get magnitudes associated with the eq sample window:
+        Mws_current_window = Mws_filtered[random_win_start_idx:random_win_start_idx + eq_samp_window_sizes[i]]
         
-        # And calculate b-value for current window:
+        # 3.c. And calculate b-value for current window:
         a, b, Mw_c, b_err = find_Mw_b_value(Mws_current_window, num_bins=int(len(Mws_current_window)/10.), Mc_method="BVS", sig_level=0.1, Nmin=10, plot_switch=False)
         if b >= np.nan:
             if b_err >= np.nan:
                 print('Skipping current window as cannot find b-value using Mc_method BVS.')
                 continue
                 
-        # And calculate b-value window centre based on average window time:
-        all_event_times_curr_window = event_origin_times_filtered[random_win_start_idx:random_win_start_idx + eq_samp_window_size_curr]
+        # 3.d. And calculate b-value window centre based on average window time:
+        all_event_times_curr_window = event_origin_times_filtered[random_win_start_idx:random_win_start_idx + eq_samp_window_sizes[i]]
         all_time_diffs_rel_to_first = np.zeros(len(all_event_times_curr_window))
         for j in range(len(all_event_times_curr_window)):
             all_time_diffs_rel_to_first[j] = all_event_times_curr_window[j] - all_event_times_curr_window[0]
         av_event_time = all_event_times_curr_window[0] + np.average(all_time_diffs_rel_to_first)
         
-        # And append all data:
+        # 3.e. And append all data:
         b_values_all_windows.append(b)
         b_values_errs_all_windows.append(b_err)
         b_values_associated_times_all_windows.append(av_event_time.datetime)

@@ -445,7 +445,7 @@ b-value variations.</p>
 <div class="section" id="1.-Find-magnitudes-for-small-catalogue-example:">
 <h2><span class="section-number">3.1. </span>1. Find magnitudes for small catalogue example:<a class="headerlink" href="#1.-Find-magnitudes-for-small-catalogue-example:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -471,7 +471,7 @@ b-value variations.</p>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -481,7 +481,7 @@ b-value variations.</p>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
@@ -490,29 +490,45 @@ b-value variations.</p>
 Processing for event: data/NLLoc_data/loc.Tom_RunNLLoc000.20100516.063457.grid0.loc.hyp
 Warning: Need to specify MT_six_tensor or MT_data_filename for accurate radiation pattern correction.
  Using average radiation pattern value instead.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/eart0504/opt/anaconda3/lib/python3.7/site-packages/obspy/io/xseed/fields.py:377: UserWarning: Date is required.
+  warnings.warn(&#39;Date is required.&#39;, UserWarning)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 Station (PLLO) or channel (HHN) not in instrument inventory, therefore not correcting for this component and removing it.
 Station (PLLO) or channel (HHZ) not in instrument inventory, therefore not correcting for this component and removing it.
 Station (PLLO) or channel (HHE) not in instrument inventory, therefore not correcting for this component and removing it.
 Processing data for station: PLLO
 Processing data for station: PLSM
-Overall seismic moment (Nm): 15521566467248.895
+Overall seismic moment (Nm): 1.55215664672e+13
 Processing data for station: PLLA
-Overall seismic moment (Nm): 13801855234245.54
+Overall seismic moment (Nm): 1.38018552342e+13
 Processing data for station: PLTM
-Overall seismic moment (Nm): 25573773257795.145
+Overall seismic moment (Nm): 2.55737732578e+13
 Processing data for station: PLRR
-Overall seismic moment (Nm): 19571298788186.605
+Overall seismic moment (Nm): 1.95712987882e+13
 Processing data for station: PLAR
-Overall seismic moment (Nm): 5471550950741.204
+Overall seismic moment (Nm): 5.47155095074e+12
 Processing data for station: PL03
-Overall seismic moment (Nm): 48727946216246.39
-Average seismic moment for event: 21444665152410.63 +/- 5561705572902.97
-Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs= 6 )
+Overall seismic moment (Nm): 4.87279462162e+13
+Average seismic moment for event: 2.14446651524e+13 +/- 5.5617055729e+12
+Moment magnitude and error: 2.88754617956 (+/- 0.142394534453 for n_obs= 6 )
 -----------------------------------------------------
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -522,32 +538,32 @@ Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs=
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 {&#39;data/NLLoc_data/loc.Tom_RunNLLoc000.20100516.063457.grid0.loc.hyp&#39;: {&#39;PLSM&#39;: {&#39;M_0&#39;: 15521566467248.895,
-   &#39;Sigma_0&#39;: 7.462354882884014e-08,
+   &#39;Sigma_0&#39;: 7.4623548828840144e-08,
    &#39;f_c&#39;: 9.888233395707239,
    &#39;t_star&#39;: 0.03633999901647883,
-   &#39;Q&#39;: 99.04360807658419,
-   &#39;Sigma_0_stdev&#39;: 9.087859776600538e-09,
-   &#39;f_c_stdev&#39;: 8.742886810741158,
+   &#39;Q&#39;: 99.043608076584192,
+   &#39;Sigma_0_stdev&#39;: 9.0878597766005378e-09,
+   &#39;f_c_stdev&#39;: 8.7428868107411581,
    &#39;t_star_stdev&#39;: 0.030655754236235826,
    &#39;Q_stdev&#39;: 117.40845103191727},
-  &#39;PLLA&#39;: {&#39;M_0&#39;: 13801855234245.54,
-   &#39;Sigma_0&#39;: 8.99397480658813e-08,
-   &#39;f_c&#39;: 6.304311684544616,
-   &#39;t_star&#39;: 0.03392771408215964,
-   &#39;Q&#39;: 109.115014412225,
-   &#39;Sigma_0_stdev&#39;: 8.22116264693659e-09,
+  &#39;PLLA&#39;: {&#39;M_0&#39;: 13801855234245.539,
+   &#39;Sigma_0&#39;: 8.9939748065881305e-08,
+   &#39;f_c&#39;: 6.3043116845446159,
+   &#39;t_star&#39;: 0.033927714082159638,
+   &#39;Q&#39;: 109.11501441222499,
+   &#39;Sigma_0_stdev&#39;: 8.2211626469365906e-09,
    &#39;f_c_stdev&#39;: 3.6489702498794476,
-   &#39;t_star_stdev&#39;: 0.03094900524682471,
+   &#39;t_star_stdev&#39;: 0.030949005246824712,
    &#39;Q_stdev&#39;: 119.61686592264596},
   &#39;PLTM&#39;: {&#39;M_0&#39;: 25573773257795.145,
-   &#39;Sigma_0&#39;: 9.875372519344738e-08,
-   &#39;f_c&#39;: 9.517629242631145,
+   &#39;Sigma_0&#39;: 9.8753725193447377e-08,
+   &#39;f_c&#39;: 9.5176292426311448,
    &#39;t_star&#39;: 0.030846363104357177,
    &#39;Q&#39;: 136.32753906249513,
    &#39;Sigma_0_stdev&#39;: 1.0967411233746552e-08,
@@ -555,31 +571,31 @@ Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs=
    &#39;t_star_stdev&#39;: 0.028414495728912977,
    &#39;Q_stdev&#39;: 147.99519270603068},
   &#39;PLRR&#39;: {&#39;M_0&#39;: 19571298788186.605,
-   &#39;Sigma_0&#39;: 7.810585924953551e-08,
-   &#39;f_c&#39;: 7.108672819864915,
-   &#39;t_star&#39;: 0.03777633162509596,
+   &#39;Sigma_0&#39;: 7.8105859249535512e-08,
+   &#39;f_c&#39;: 7.1086728198649149,
+   &#39;t_star&#39;: 0.037776331625095957,
    &#39;Q&#39;: 157.31634259096046,
-   &#39;Sigma_0_stdev&#39;: 9.660738708169465e-09,
-   &#39;f_c_stdev&#39;: 5.790080943783466,
-   &#39;t_star_stdev&#39;: 0.03937398267922096,
+   &#39;Sigma_0_stdev&#39;: 9.6607387081694647e-09,
+   &#39;f_c_stdev&#39;: 5.7900809437834662,
+   &#39;t_star_stdev&#39;: 0.039373982679220959,
    &#39;Q_stdev&#39;: 150.9330253985095},
-  &#39;PLAR&#39;: {&#39;M_0&#39;: 5471550950741.204,
+  &#39;PLAR&#39;: {&#39;M_0&#39;: 5471550950741.2041,
    &#39;Sigma_0&#39;: 1.976462835659904e-08,
-   &#39;f_c&#39;: 6.432798077441835,
-   &#39;t_star&#39;: 0.01776713900937713,
-   &#39;Q&#39;: 345.0070732783035,
+   &#39;f_c&#39;: 6.4327980774418352,
+   &#39;t_star&#39;: 0.017767139009377129,
+   &#39;Q&#39;: 345.00707327830349,
    &#39;Sigma_0_stdev&#39;: 1.1202250954183945e-09,
    &#39;f_c_stdev&#39;: 2.0570103689026746,
    &#39;t_star_stdev&#39;: 0.015353403651592852,
-   &#39;Q_stdev&#39;: 399.2462368119944},
-  &#39;PL03&#39;: {&#39;M_0&#39;: 48727946216246.39,
+   &#39;Q_stdev&#39;: 399.24623681199438},
+  &#39;PL03&#39;: {&#39;M_0&#39;: 48727946216246.391,
    &#39;Sigma_0&#39;: 1.1051779336441324e-07,
    &#39;f_c&#39;: -8.024389274295606,
-   &#39;t_star&#39;: 0.04347152828263567,
-   &#39;Q&#39;: 159.6539439901699,
-   &#39;Sigma_0_stdev&#39;: 1.792139411948789e-08,
+   &#39;t_star&#39;: 0.043471528282635667,
+   &#39;Q&#39;: 159.65394399016989,
+   &#39;Sigma_0_stdev&#39;: 1.7921394119487889e-08,
    &#39;f_c_stdev&#39;: 8.865041390516696,
-   &#39;t_star_stdev&#39;: 0.0478537004126364,
+   &#39;t_star_stdev&#39;: 0.047853700412636403,
    &#39;Q_stdev&#39;: 145.033735777104}}}
 </pre></div></div>
 </div>
@@ -589,7 +605,7 @@ Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs=
 <h2><span class="section-number">3.2. </span>2. Plot up entire large VT catalogue as Gutenberg-Richter distribution:<a class="headerlink" href="#2.-Plot-up-entire-large-VT-catalogue-as-Gutenberg-Richter-distribution:" title="Permalink to this headline">¶</a></h2>
 <p>Note that the code supports a number of ways to find the magnitude of completeness, Mc. The one we use here is the b-value stability method (BVS), detailed in Roberts et al 2015.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -610,7 +626,7 @@ Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs=
 <div class="section" id="3.-Analyse-and-plot-b-value-temporal-variaitons:">
 <h2><span class="section-number">3.3. </span>3. Analyse and plot b-value temporal variaitons:<a class="headerlink" href="#3.-Analyse-and-plot-b-value-temporal-variaitons:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -642,7 +658,7 @@ Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs=
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -652,17 +668,6 @@ Moment magnitude and error: 2.887546179559715 (+/- 0.1423945344533042 for n_obs=
                                                                         <span class="n">Q_filt</span><span class="o">=</span><span class="n">Q_filt</span><span class="p">,</span> <span class="n">upper_Mw_filt</span><span class="o">=</span><span class="n">upper_Mw_filt</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/Users/eart0504/opt/anaconda3/lib/python3.7/site-packages/numpy/lib/function_base.py:393: RuntimeWarning: Mean of empty slice.
-  avg = a.mean(axis)
-/Users/eart0504/opt/anaconda3/lib/python3.7/site-packages/numpy/core/_methods.py:161: RuntimeWarning: invalid value encountered in double_scalars
-  ret = ret.dtype.type(ret / rcount)
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -677,7 +682,7 @@ Processing for eq samp window: 4000 / 5000
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -688,7 +693,7 @@ Processing for eq samp window: 4000 / 5000
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
