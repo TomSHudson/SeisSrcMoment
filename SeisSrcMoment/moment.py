@@ -555,10 +555,11 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
 def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
                 window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], surf_inc_angle_rad=0., st=None, 
                 use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, plot_switch=False):
-    """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009.
+    """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009. Note that input waveform mseed 
+    data should be in velocity format for this version.
     Arguments:
     Required:
-    mseed_filename - Filename of the mseed data to use (str)
+    mseed_filename - Filename of the mseed data to use. Note: This data should be velocity data for this current version. (str)
     NLLoc_event_hyp_filename - Filename of the nonlinloc location file containing the phase arrival information for the event. (str)
     stations_to_calculate_moment_for - List of station names to use for calculating the moment for (list of strs)
     density - Density of the medium (float)
