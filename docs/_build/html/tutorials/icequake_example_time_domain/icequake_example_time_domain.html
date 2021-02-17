@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>1. Example usage of SeisSrcMoment to calculate \(M_W\) in the time domain &mdash; SeisSrcMoment 0.0.2 documentation</title>
+  <title>3.1. Example usage of SeisSrcMoment to calculate \(M_W\) in the time domain &mdash; SeisSrcMoment 0.0.2 documentation</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" href="../vt_example_frequency_domain/vt_example_frequency_domain.html" />
-    <link rel="prev" title="Tutorials" href="../../tutorials.html" /> 
+    <link rel="next" title="3.2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" href="../vt_example_frequency_domain/vt_example_frequency_domain.html" />
+    <link rel="prev" title="3. Tutorials" href="../../tutorials.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -91,14 +91,14 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../contents.html">1. Contents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">2. Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#1.-Specify-parameters-to-use:">1.1. 1. Specify parameters to use:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Run-moment-calculation:">1.2. Run moment calculation:</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">3. Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#1.-Specify-parameters-to-use:">3.1.1. 1. Specify parameters to use:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Run-moment-calculation:">3.1.2. Run moment calculation:</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../vt_example_frequency_domain/vt_example_frequency_domain.html">2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html">3. Example of processing moment magnitudes for an entire earthqauke catalogue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vt_example_frequency_domain/vt_example_frequency_domain.html">3.2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html">3.3. Example of processing moment magnitudes for an entire earthqauke catalogue</a></li>
 </ul>
 </li>
 </ul>
@@ -147,9 +147,9 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../../tutorials.html">Tutorials</a> &raquo;</li>
+          <li><a href="../../tutorials.html"><span class="section-number">3. </span>Tutorials</a> &raquo;</li>
         
-      <li><span class="section-number">1. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</li>
+      <li><span class="section-number">3.1. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -424,10 +424,10 @@ div.rendered_html tbody tr:hover {
 }
 </style>
 <div class="section" id="Example-usage-of-SeisSrcMoment-to-calculate-M_W-in-the-time-domain">
-<h1><span class="section-number">1. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain<a class="headerlink" href="#Example-usage-of-SeisSrcMoment-to-calculate-M_W-in-the-time-domain" title="Permalink to this headline">¶</a></h1>
+<h1><span class="section-number">3.1. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain<a class="headerlink" href="#Example-usage-of-SeisSrcMoment-to-calculate-M_W-in-the-time-domain" title="Permalink to this headline">¶</a></h1>
 <p>This example is for an icequake at Vatnajokull, Iceland. The moment magnitude, <span class="math notranslate nohighlight">\(M_W\)</span>, is calculated in the time domain, i.e. the long period spectral level is calculated from the integral of the displacement through time.</p>
 <div class="section" id="1.-Specify-parameters-to-use:">
-<h2><span class="section-number">1.1. </span>1. Specify parameters to use:<a class="headerlink" href="#1.-Specify-parameters-to-use:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.1.1. </span>1. Specify parameters to use:<a class="headerlink" href="#1.-Specify-parameters-to-use:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -465,9 +465,9 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="Run-moment-calculation:">
-<h2><span class="section-number">1.2. </span>Run moment calculation:<a class="headerlink" href="#Run-moment-calculation:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.1.2. </span>Run moment calculation:<a class="headerlink" href="#Run-moment-calculation:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -484,25 +484,25 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Processing data for station: SKR01
-Overall seismic moment (Nm): 18213771.45898596
+Overall seismic moment (Nm): 7860258.2629
 Processing data for station: SKR02
-Overall seismic moment (Nm): 10188781.016174326
+Overall seismic moment (Nm): 7596240.15988
 Processing data for station: SKR03
-Overall seismic moment (Nm): 6236025.461794561
+Overall seismic moment (Nm): 5185040.49289
 Processing data for station: SKR04
-Overall seismic moment (Nm): 8573795.56545731
+Overall seismic moment (Nm): 3427612.88854
 Processing data for station: SKR05
-Overall seismic moment (Nm): 6351311.5163656175
+Overall seismic moment (Nm): 4675845.68622
 Processing data for station: SKR06
-Overall seismic moment (Nm): 3736092.863904548
+Overall seismic moment (Nm): 3582958.1162
 Processing data for station: SKR07
-Overall seismic moment (Nm): 7871438.4065007055
-Average seismic moment for event: 8738745.184169004 +/- 1626616.194775836
-Seismic moment release (Nm): 8738745.184169004
+Overall seismic moment (Nm): 7224947.64632
+Average seismic moment for event: 5650414.75042 +/- 662869.178247
+Seismic moment release (Nm): 5650414.75042
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -517,17 +517,8 @@ Seismic moment release (Nm): 8738745.184169004
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Local moment magnitude, M: -1.3723672827986757
+Local moment magnitude, M: -1.49861311535
 </pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>
-</pre></div>
-</div>
 </div>
 </div>
 </div>
@@ -540,10 +531,10 @@ Local moment magnitude, M: -1.3723672827986757
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../vt_example_frequency_domain/vt_example_frequency_domain.html" class="btn btn-neutral float-right" title="2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../vt_example_frequency_domain/vt_example_frequency_domain.html" class="btn btn-neutral float-right" title="3.2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../../tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../../tutorials.html" class="btn btn-neutral float-left" title="3. Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

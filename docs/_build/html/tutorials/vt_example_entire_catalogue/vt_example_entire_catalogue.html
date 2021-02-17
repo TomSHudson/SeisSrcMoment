@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>3. Example of processing moment magnitudes for an entire earthqauke catalogue &mdash; SeisSrcMoment 0.0.2 documentation</title>
+  <title>3.3. Example of processing moment magnitudes for an entire earthqauke catalogue &mdash; SeisSrcMoment 0.0.2 documentation</title>
   
 
   
@@ -39,7 +39,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="prev" title="2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" href="../vt_example_frequency_domain/vt_example_frequency_domain.html" /> 
+    <link rel="prev" title="3.2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" href="../vt_example_frequency_domain/vt_example_frequency_domain.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,13 +90,13 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../contents.html">1. Contents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">2. Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../icequake_example_time_domain/icequake_example_time_domain.html">1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../vt_example_frequency_domain/vt_example_frequency_domain.html">2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3. Example of processing moment magnitudes for an entire earthqauke catalogue</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#1.-Find-magnitudes-for-small-catalogue-example:">3.1. 1. Find magnitudes for small catalogue example:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#2.-Plot-up-entire-large-VT-catalogue-as-Gutenberg-Richter-distribution:">3.2. 2. Plot up entire large VT catalogue as Gutenberg-Richter distribution:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#3.-Analyse-and-plot-b-value-temporal-variaitons:">3.3. 3. Analyse and plot b-value temporal variaitons:</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">3. Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../icequake_example_time_domain/icequake_example_time_domain.html">3.1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vt_example_frequency_domain/vt_example_frequency_domain.html">3.2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.3. Example of processing moment magnitudes for an entire earthqauke catalogue</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#1.-Find-magnitudes-for-small-catalogue-example:">3.3.1. 1. Find magnitudes for small catalogue example:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#2.-Plot-up-entire-large-VT-catalogue-as-Gutenberg-Richter-distribution:">3.3.2. 2. Plot up entire large VT catalogue as Gutenberg-Richter distribution:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#3.-Analyse-and-plot-b-value-temporal-variaitons:">3.3.3. 3. Analyse and plot b-value temporal variaitons:</a></li>
 </ul>
 </li>
 </ul>
@@ -147,9 +147,9 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../../tutorials.html">Tutorials</a> &raquo;</li>
+          <li><a href="../../tutorials.html"><span class="section-number">3. </span>Tutorials</a> &raquo;</li>
         
-      <li><span class="section-number">3. </span>Example of processing moment magnitudes for an entire earthqauke catalogue</li>
+      <li><span class="section-number">3.3. </span>Example of processing moment magnitudes for an entire earthqauke catalogue</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -424,7 +424,7 @@ div.rendered_html tbody tr:hover {
 }
 </style>
 <div class="section" id="Example-of-processing-moment-magnitudes-for-an-entire-earthqauke-catalogue">
-<h1><span class="section-number">3. </span>Example of processing moment magnitudes for an entire earthqauke catalogue<a class="headerlink" href="#Example-of-processing-moment-magnitudes-for-an-entire-earthqauke-catalogue" title="Permalink to this headline">¶</a></h1>
+<h1><span class="section-number">3.3. </span>Example of processing moment magnitudes for an entire earthqauke catalogue<a class="headerlink" href="#Example-of-processing-moment-magnitudes-for-an-entire-earthqauke-catalogue" title="Permalink to this headline">¶</a></h1>
 <p>This example shows how to use SeisSrcMoment to process an entire earthquake catalogue.</p>
 <p>Notes for this example:</p>
 <p>We do not include all the data to run for an entire earthquake catalogue, as that would be inappropriate to host on GitHub. However, instead we: 1. Include an example event to show how a full catalogue would be processed. 2. Include a python dictionary that is in the same format as the outputs from SeisSrcMoment, for a full earthquake catalogue from Uturuncu volcano, Bolivia, in order to show how the catalogue post-processing code works. 3. Shows example of how to analyse and plot temporal
@@ -443,7 +443,7 @@ b-value variations.</p>
 </div>
 </div>
 <div class="section" id="1.-Find-magnitudes-for-small-catalogue-example:">
-<h2><span class="section-number">3.1. </span>1. Find magnitudes for small catalogue example:<a class="headerlink" href="#1.-Find-magnitudes-for-small-catalogue-example:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.3.1. </span>1. Find magnitudes for small catalogue example:<a class="headerlink" href="#1.-Find-magnitudes-for-small-catalogue-example:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -602,7 +602,7 @@ Moment magnitude and error: 2.88754617956 (+/- 0.142394534453 for n_obs= 6 )
 <p>Note that one not only gets the seismic moment release, M_0 for each event (which can easily be converted into <span class="math notranslate nohighlight">\(M_w\)</span>), but also: 1. <span class="math notranslate nohighlight">\(t^*\)</span>, which can be used for attenuation tomography. 2. An approximation of the path-average Q, which can be used to assess the potential for attenuation tomography. 3. <span class="math notranslate nohighlight">\(f_c\)</span>, the corner frequency, which can be used for stress-drop or earthquake fault area calculations.</p>
 </div>
 <div class="section" id="2.-Plot-up-entire-large-VT-catalogue-as-Gutenberg-Richter-distribution:">
-<h2><span class="section-number">3.2. </span>2. Plot up entire large VT catalogue as Gutenberg-Richter distribution:<a class="headerlink" href="#2.-Plot-up-entire-large-VT-catalogue-as-Gutenberg-Richter-distribution:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.3.2. </span>2. Plot up entire large VT catalogue as Gutenberg-Richter distribution:<a class="headerlink" href="#2.-Plot-up-entire-large-VT-catalogue-as-Gutenberg-Richter-distribution:" title="Permalink to this headline">¶</a></h2>
 <p>Note that the code supports a number of ways to find the magnitude of completeness, Mc. The one we use here is the b-value stability method (BVS), detailed in Roberts et al 2015.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -624,7 +624,7 @@ Moment magnitude and error: 2.88754617956 (+/- 0.142394534453 for n_obs= 6 )
 </div>
 </div>
 <div class="section" id="3.-Analyse-and-plot-b-value-temporal-variaitons:">
-<h2><span class="section-number">3.3. </span>3. Analyse and plot b-value temporal variaitons:<a class="headerlink" href="#3.-Analyse-and-plot-b-value-temporal-variaitons:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.3.3. </span>3. Analyse and plot b-value temporal variaitons:<a class="headerlink" href="#3.-Analyse-and-plot-b-value-temporal-variaitons:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -741,7 +741,7 @@ Processing for eq samp window: 4000 / 5000
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="../vt_example_frequency_domain/vt_example_frequency_domain.html" class="btn btn-neutral float-left" title="2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../vt_example_frequency_domain/vt_example_frequency_domain.html" class="btn btn-neutral float-left" title="3.2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain &mdash; SeisSrcMoment 0.0.2 documentation</title>
+  <title>3.2. Example usage of SeisSrcMoment to calculate \(M_W\) in the frequency domain &mdash; SeisSrcMoment 0.0.2 documentation</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="3. Example of processing moment magnitudes for an entire earthqauke catalogue" href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html" />
-    <link rel="prev" title="1. Example usage of SeisSrcMoment to calculate \(M_W\) in the time domain" href="../icequake_example_time_domain/icequake_example_time_domain.html" /> 
+    <link rel="next" title="3.3. Example of processing moment magnitudes for an entire earthqauke catalogue" href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html" />
+    <link rel="prev" title="3.1. Example usage of SeisSrcMoment to calculate \(M_W\) in the time domain" href="../icequake_example_time_domain/icequake_example_time_domain.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -91,17 +91,17 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../contents.html">1. Contents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">2. Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../icequake_example_time_domain/icequake_example_time_domain.html">1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#1.-Specify-parameters-to-use:">2.1. 1. Specify parameters to use:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Run-moment-calculation:">2.2. Run moment calculation:</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#References:">2.2.1. References:</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../tutorials.html">3. Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../icequake_example_time_domain/icequake_example_time_domain.html">3.1. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the time domain</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#1.-Specify-parameters-to-use:">3.2.1. 1. Specify parameters to use:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Run-moment-calculation:">3.2.2. Run moment calculation:</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#References:">3.2.2.1. References:</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html">3. Example of processing moment magnitudes for an entire earthqauke catalogue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html">3.3. Example of processing moment magnitudes for an entire earthqauke catalogue</a></li>
 </ul>
 </li>
 </ul>
@@ -150,9 +150,9 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../../tutorials.html">Tutorials</a> &raquo;</li>
+          <li><a href="../../tutorials.html"><span class="section-number">3. </span>Tutorials</a> &raquo;</li>
         
-      <li><span class="section-number">2. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</li>
+      <li><span class="section-number">3.2. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -427,12 +427,12 @@ div.rendered_html tbody tr:hover {
 }
 </style>
 <div class="section" id="Example-usage-of-SeisSrcMoment-to-calculate-M_W-in-the-frequency-domain">
-<h1><span class="section-number">2. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain<a class="headerlink" href="#Example-usage-of-SeisSrcMoment-to-calculate-M_W-in-the-frequency-domain" title="Permalink to this headline">¶</a></h1>
+<h1><span class="section-number">3.2. </span>Example usage of SeisSrcMoment to calculate <span class="math notranslate nohighlight">\(M_W\)</span> in the frequency domain<a class="headerlink" href="#Example-usage-of-SeisSrcMoment-to-calculate-M_W-in-the-frequency-domain" title="Permalink to this headline">¶</a></h1>
 <p>This example is for a volcano-tectonic earthquake at Uturuncu, Bolivia. The moment magnitude, <span class="math notranslate nohighlight">\(M_W\)</span>, is calculated in the frequency domain, i.e. the long period spectral level is calculated by fitting a Brune model, as detailed in Stork et al (2014). This earthquake’s moment tensor is analysed in Alvizuri and Tape (2016), with <span class="math notranslate nohighlight">\(M_W\)</span> = 2.80 found by full waveform moment tensor inversion.</p>
 <div class="section" id="1.-Specify-parameters-to-use:">
-<h2><span class="section-number">2.1. </span>1. Specify parameters to use:<a class="headerlink" href="#1.-Specify-parameters-to-use:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.2.1. </span>1. Specify parameters to use:<a class="headerlink" href="#1.-Specify-parameters-to-use:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -443,7 +443,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -467,7 +467,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -479,9 +479,9 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="Run-moment-calculation:">
-<h2><span class="section-number">2.2. </span>Run moment calculation:<a class="headerlink" href="#Run-moment-calculation:" title="Permalink to this headline">¶</a></h2>
+<h2><span class="section-number">3.2.2. </span>Run moment calculation:<a class="headerlink" href="#Run-moment-calculation:" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -507,8 +507,6 @@ Warning: Need to specify MT_six_tensor or MT_data_filename for accurate radiatio
 <div class="highlight"><pre>
 /Users/eart0504/opt/anaconda3/lib/python3.7/site-packages/obspy/io/xseed/fields.py:377: UserWarning: Date is required.
   warnings.warn(&#39;Date is required.&#39;, UserWarning)
-/Users/eart0504/opt/anaconda3/lib/python3.7/site-packages/obspy/signal/detrend.py:31: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
-  if not np.issubdtype(data.dtype, float):
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -519,14 +517,29 @@ Warning: Need to specify MT_six_tensor or MT_data_filename for accurate radiatio
 Station (PLLO) or channel (HHN) not in instrument inventory, therefore not correcting for this component and removing it.
 Station (PLLO) or channel (HHE) not in instrument inventory, therefore not correcting for this component and removing it.
 Station (PLLO) or channel (HHZ) not in instrument inventory, therefore not correcting for this component and removing it.
-Sigma_0: 7.081226631247064e-08 f_c: 10.055787013239904 t_star: 0.03557862597744755
+Sigma_0: 8.41237561982e-08 f_c: 9.88411773698 t_star: 0.038183935262
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:480: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:481: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:499: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:500: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_3.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_3.png" />
+<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_4.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_4.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -534,22 +547,22 @@ Sigma_0: 7.081226631247064e-08 f_c: 10.055787013239904 t_star: 0.035578625977447
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Sigma_0: 8.965846391157487e-08 f_c: 6.532205479084794 t_star: 0.03525616473498924
+Sigma_0: 9.69070140418e-08 f_c: -6.77237617514 t_star: 0.0374773897286
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_5.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_5.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
+<div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Sigma_0: 9.875372519344738e-08 f_c: 9.517629242631145 t_star: 0.030846363104357177
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:480: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:481: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:499: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:500: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -564,14 +577,29 @@ Sigma_0: 9.875372519344738e-08 f_c: 9.517629242631145 t_star: 0.0308463631043571
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Sigma_0: 7.810585924953551e-08 f_c: 7.108672819864915 t_star: 0.03777633162509596
+Sigma_0: 1.20733156209e-07 f_c: 9.15817342733 t_star: 0.0366651655612
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:480: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:481: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:499: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:500: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_9.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_9.png" />
+<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_10.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_10.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -579,22 +607,22 @@ Sigma_0: 7.810585924953551e-08 f_c: 7.108672819864915 t_star: 0.0377763316250959
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Sigma_0: 1.976462835659904e-08 f_c: 6.432798077441835 t_star: 0.01776713900937713
+Sigma_0: 8.70615040794e-08 f_c: 7.1028571671 t_star: 0.0386034621862
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_11.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_11.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
+<div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Sigma_0: 1.1012044324853064e-07 f_c: -7.998193523331016 t_star: 0.043440263611975824
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:480: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:481: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:499: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:500: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -604,16 +632,76 @@ Sigma_0: 1.1012044324853064e-07 f_c: -7.998193523331016 t_star: 0.04344026361197
 <img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_13.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_13.png" />
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Sigma_0: 2.12078229403e-08 f_c: 6.12423257402 t_star: 0.0165399569795
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:480: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:481: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:499: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:500: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_16.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_16.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Sigma_0: 1.35783239206e-07 f_c: -7.8257630397 t_star: 0.0469219509214
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:480: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:481: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[0,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:499: MatplotlibDeprecationWarning: The &#39;nonposx&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_xscale(&#34;log&#34;, nonposx=&#39;clip&#39;)
+/Users/eart0504/Documents/python/github_repositories/SeisSrcMoment/SeisSrcMoment/moment.py:500: MatplotlibDeprecationWarning: The &#39;nonposy&#39; parameter of __init__() has been renamed &#39;nonpositive&#39; since Matplotlib 3.3; support for the old name will be dropped two minor releases later.
+  axes[1,0].set_yscale(&#34;log&#34;, nonposy=&#39;clip&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_19.png" src="../../_images/tutorials_vt_example_frequency_domain_vt_example_frequency_domain_7_19.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Seismic moment release (Nm): 16061623033951.943
+Seismic moment release (Nm): 1.47886373063e+13
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -628,12 +716,12 @@ Seismic moment release (Nm): 16061623033951.943
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Local moment magnitude, M: 2.803859619203539
+Local moment magnitude, M: 2.77995210529
 </pre></div></div>
 </div>
 <p>Note that this magnitude is approximately the same as that found in Alvizuri and Tape (2016), where they found that <span class="math notranslate nohighlight">\(M_W = 2.80\)</span>.</p>
 <div class="section" id="References:">
-<h3><span class="section-number">2.2.1. </span>References:<a class="headerlink" href="#References:" title="Permalink to this headline">¶</a></h3>
+<h3><span class="section-number">3.2.2.1. </span>References:<a class="headerlink" href="#References:" title="Permalink to this headline">¶</a></h3>
 <p>Alvizuri, C., &amp; Tape, C. (2016). Full moment tensors for small events (Mw &lt; 3) at Uturuncu volcano, Bolivia. Geophysical Journal International, 206(3), 1761–1783. <a class="reference external" href="https://doi.org/10.1093/gji/ggw247">https://doi.org/10.1093/gji/ggw247</a></p>
 <p>Stork, A. L., Verdon, J. P., &amp; Kendall, J. M. (2014). The robustness of seismic moment and magnitudes estimated using spectral analysis. Geophysical Prospecting, 62(4), 862–878. <a class="reference external" href="https://doi.org/10.1111/1365-2478.12134">https://doi.org/10.1111/1365-2478.12134</a></p>
 <div class="nbinput nblast docutils container">
@@ -657,10 +745,10 @@ Local moment magnitude, M: 2.803859619203539
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html" class="btn btn-neutral float-right" title="3. Example of processing moment magnitudes for an entire earthqauke catalogue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../vt_example_entire_catalogue/vt_example_entire_catalogue.html" class="btn btn-neutral float-right" title="3.3. Example of processing moment magnitudes for an entire earthqauke catalogue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../icequake_example_time_domain/icequake_example_time_domain.html" class="btn btn-neutral float-left" title="1. Example usage of SeisSrcMoment to calculate \(M_W\) in the time domain" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../icequake_example_time_domain/icequake_example_time_domain.html" class="btn btn-neutral float-left" title="3.1. Example usage of SeisSrcMoment to calculate \(M_W\) in the time domain" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

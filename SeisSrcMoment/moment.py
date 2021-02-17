@@ -149,6 +149,25 @@ def numerically_integrate(x_data, y_data):
     int_y_data[-1] = int_y_data[-2] # And set final value
     return int_y_data
 
+def integrate_trace_through_time(tr, detrend=True):
+    """Function to integrate trace through time.
+    Retruns time-integrated trace."""
+    # Integrate trace to get displacement:
+    x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
+    y_data = tr.data # Velocity data
+    tr_disp_data = numerically_integrate(x_data, y_data)
+    tr_disp = tr.copy()
+    tr_disp.data = tr_disp_data
+    # And detrend displacement data:
+    if detrend:
+        tr_disp.detrend('demean')
+    return tr_disp
+
+
+def find_nearest(array,value):
+    idx = (np.abs(array-value)).argmin()
+    return array[idx], idx
+
 
 def Brune_model(f, Sigma_0, f_c, t_star):
     """Brune source model. Uses t_star = travel-time/Q.
@@ -287,35 +306,36 @@ def rotate_ZNE_to_LQT_axes(st, NLLoc_event_hyp_filename, stations_not_to_process
     return st_rotated
     
 
-def get_displacement_integrated_over_time(tr, plot_switch=False):
+def get_displacement_integrated_over_time(tr_disp, plot_switch=False):
     """Function to get integrated displacement over time, for calculating moment. Takes trace of component L as input, 
     which has had the instrument response corrected and been rotated such that the trace is alligned with the P wave 
     arrival direction."""
     
     # Take FFT to get peak frequency:
-    freq, Pxx = periodogram(tr.data, fs=tr.stats.sampling_rate)
+    freq, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate)
     tr_data_freq_domain = np.sqrt(Pxx)
 
     peak_freq_idx = np.argmax(tr_data_freq_domain)
     peak_freq = freq[peak_freq_idx]
     
-    # Integrate trace to get displacement:
-    x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
-    y_data = tr.data # Velocity data
-    tr_displacement = numerically_integrate(x_data, y_data)
+    # # Integrate trace to get displacement:
+    # Note: This is now done outside this function.
+    # x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
+    # y_data = tr.data # Velocity data
+    # tr_disp = numerically_integrate(x_data, y_data)
     
     # Integrate displacement to get the long period spectral level (total displacement*time):
-    x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
-    y_data = np.abs(tr_displacement) # Absolute displacement data (Note: Absolute so that obtains area under displacement rather than just indefinite integral, to account for any negative overall displacement)
-    tr_displacement_area_with_time = numerically_integrate(x_data, y_data)
-    #tr_displacement_area_with_time = np.abs(tr_displacement_area_with_time) # And take the absolute values, to account for any negative overall displacement
+    x_data = np.arange(0.0,len(tr_disp.data)/tr_disp.stats.sampling_rate,1./tr_disp.stats.sampling_rate) # Get time data
+    y_data = np.abs(tr_disp.data) # Absolute displacement data (Note: Absolute so that obtains area under displacement rather than just indefinite integral, to account for any negative overall displacement)
+    tr_disp_area_with_time = numerically_integrate(x_data, y_data)
+    #tr_disp_area_with_time = np.abs(tr_disp_area_with_time) # And take the absolute values, to account for any negative overall displacement
     
     # And take FFT of displacement:
-    freq_displacement, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate) 
-    tr_displacement_data_freq_domain = np.sqrt(Pxx)
+    freq_displacement, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate) 
+    tr_disp_data_freq_domain = np.sqrt(Pxx)
 
     # And get maximum displacement integrated with time (To find spectral level):
-    long_period_spectral_level = np.max(tr_displacement_area_with_time)
+    long_period_spectral_level = np.max(tr_disp_area_with_time)
     
     # And plot some figures if specified:
     if plot_switch:
@@ -326,21 +346,21 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
         axes[0,0].set_xlabel("Frequency (Hz)")
         axes[0,0].set_ylabel("Amplitude (m/s/Hz)")
         axes[0,0].set_title("Velocity spectrum")
-        axes[0,1].plot(x_data, tr_displacement/np.max(np.abs(tr_displacement)), label="Displacement")
-        axes[0,1].plot(x_data, tr.data/np.max(np.abs(tr.data)), label="Velocity")
-        axes[0,1].set_xlabel("Time (s)")
-        axes[0,1].set_ylabel("Amplitude (normallised)")
-        axes[0,1].set_title("Comparison of velocity and displacement")
+        # axes[0,1].plot(x_data, tr_disp/np.max(np.abs(tr_disp)), label="Displacement")
+        # axes[0,1].plot(x_data, tr_disp.data/np.max(np.abs(tr_disp.data)), label="Velocity")
+        # axes[0,1].set_xlabel("Time (s)")
+        # axes[0,1].set_ylabel("Amplitude (normallised)")
+        # axes[0,1].set_title("Comparison of velocity and displacement")
         # And take FFT of displacement:
-        freq_displacement, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate)
-        tr_displacement_data_freq_domain = np.sqrt(Pxx)
-        axes[1,0].plot(freq_displacement[1:], tr_displacement_data_freq_domain[1:])
+        freq_displacement, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate)
+        tr_disp_data_freq_domain = np.sqrt(Pxx)
+        axes[1,0].plot(freq_displacement[1:], tr_disp_data_freq_domain[1:])
         axes[1,0].set_xscale("log", nonposx='clip')
         axes[1,0].set_yscale("log", nonposy='clip')
         axes[1,0].set_xlabel("Frequency (Hz)")
         axes[1,0].set_ylabel("Amplitude (m/Hz)")
         axes[1,0].set_title("Displacement spectrum")
-        axes[1,1].plot(x_data, tr_displacement_area_with_time)
+        axes[1,1].plot(x_data, tr_disp_area_with_time)
         axes[1,1].set_xlabel("Time (s)")
         axes[1,1].set_ylabel("Integrated displacement (m . s)")
         axes[1,1].set_title("Integrated dispacement")
@@ -349,49 +369,54 @@ def get_displacement_integrated_over_time(tr, plot_switch=False):
     return long_period_spectral_level
 
 
-def get_displacement_spectra_coeffs(tr, tr_noise=None, plot_switch=False, return_spectra_data=False):
+def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=False, return_spectra_data=False, manual_fixed_fc_Hz=None):
     """Function to get long-period spectral level, for calculating moment. Also finds the corner frequency and 
     travel-time / Q. Takes trace of component L as input, which has had the instrument response corrected and 
     been rotated such that the trace is alligned with the P wave arrival direction.
-    If tr_noise is specified, will remove noise from specified tr_noise window from signal."""
+    If tr_noise_disp is specified, will remove noise from specified tr_noise window from signal.
+    If manual_fixed_fc_Hz is specified then will take approximate long-period spectral level as the average amplitude 
+    of the spectral amplitude below this frequency instead of fitting Brune model. Default is not to use this 
+    (manual_fixed_fc_Hz=None) and fit a full Brune model."""
     
     # Take FFT to get peak frequency:
-    freq, Pxx = periodogram(tr.data, fs=tr.stats.sampling_rate)
+    freq, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate)
     tr_data_freq_domain = np.sqrt(Pxx)
     
-    # Integrate trace to get displacement:
-    x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
-    y_data = tr.data # Velocity data
-    tr_displacement = numerically_integrate(x_data, y_data)
-    # And detrend displacement data:
-    tr_disp_tmp = tr.copy()
-    tr_disp_tmp.data = tr_displacement
-    tr_disp_tmp.detrend('demean')
-    tr_displacement = tr_disp_tmp.data
-    del tr_disp_tmp
-    gc.collect()
+    # # Integrate trace to get displacement:
+    # Note: This is now done outside this function
+    # x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
+    # y_data = tr.data # Velocity data
+    # tr_disp = numerically_integrate(x_data, y_data)
+    # # And detrend displacement data:
+    # tr_disp_tmp = tr.copy()
+    # tr_disp_tmp.data = tr_disp
+    # tr_disp_tmp.detrend('demean')
+    # tr_disp = tr_disp_tmp.data
+    # del tr_disp_tmp
+    # gc.collect()
     
     # Get spectra of displacement (using multi-taper spectral analysis method):
     # (See: Thomson1982, Park1987, Prieto2009, Pozgay2009a for further details)
-    Pxx, freq_displacement = mtspec(tr_displacement, delta=1./tr.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+    Pxx, freq_displacement = mtspec(tr_disp.data, delta=1./tr_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
     disp_spect_amp = np.sqrt(Pxx)
 
     # Remove noise, if tr_noise specified:
-    if tr_noise:
-        if len(tr_noise.data) == len(tr.data):
-            # Integrate noise trace to get displacement:
-            x_data_noise = np.arange(0.0,len(tr_noise.data)/tr_noise.stats.sampling_rate,1./tr_noise.stats.sampling_rate) # Get time data
-            y_data_noise = tr_noise.data # Velocity data
-            tr_displacement_noise = numerically_integrate(x_data_noise, y_data_noise)
-            # And detrend displacement noise data:
-            tr_disp_tmp = tr.copy()
-            tr_disp_tmp.data = tr_displacement_noise
-            tr_disp_tmp.detrend('demean')
-            tr_displacement_noise = tr_disp_tmp.data
-            del tr_disp_tmp
-            gc.collect()
+    if tr_noise_disp:
+        if len(tr_noise_disp.data) == len(tr_disp.data):
+            # # Integrate noise trace to get displacement:
+            # Note: This is now done outside this function
+            # x_data_noise = np.arange(0.0,len(tr_noise.data)/tr_noise.stats.sampling_rate,1./tr_noise.stats.sampling_rate) # Get time data
+            # y_data_noise = tr_noise.data # Velocity data
+            # tr_noise_disp = numerically_integrate(x_data_noise, y_data_noise)
+            # # And detrend displacement noise data:
+            # tr_disp_tmp = tr.copy()
+            # tr_disp_tmp.data = tr_noise_disp
+            # tr_disp_tmp.detrend('demean')
+            # tr_noise_disp = tr_disp_tmp.data
+            # del tr_disp_tmp
+            # gc.collect()
             # And get noise spectrum:
-            Pxx_noise, freq_displacement_noise = mtspec(tr_displacement_noise, delta=1./tr_noise.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+            Pxx_noise, freq_displacement_noise = mtspec(tr_noise_disp.data, delta=1./tr_noise_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
             disp_spect_amp_noise = np.sqrt(Pxx_noise)
             # And remove noise spectrum:
             disp_spect_amp_no_noise = disp_spect_amp - disp_spect_amp_noise
@@ -404,34 +429,51 @@ def get_displacement_spectra_coeffs(tr, tr_noise=None, plot_switch=False, return
             sys.exit()
 
     # And fit Brune model:
-    # Try with noise correction, and if fails, do without noise correction:
-    try:
-        param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
-    except RuntimeError:
-        # If fails to solve, revert to pre full noise spectrum correction:
-        param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=[np.max(disp_spect_amp_before_corr), 10., 1./250.])
-        print("Warning: Reverted to uncorrected displacement spectral fit for:",tr.stats.station, ", due to potential issue with noise spectrum.")
-    Sigma_0 = param[0]
-    f_c =  param[1]
-    t_star = param[2]
-    Brune_model_spect_amp_fit = Brune_model(freq_displacement[1:], Sigma_0, f_c, t_star)
-    Sigma_0_stdev = np.sqrt(param_cov[0,0])
-    f_c_stdev = np.sqrt(param_cov[1,1])
-    t_star_stdev = np.sqrt(param_cov[2,2])
-    
+    if manual_fixed_fc_Hz==None:
+        # Try with noise correction, and if fails, do without noise correction:
+        try:
+            param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
+        except RuntimeError:
+            # If fails to solve, revert to pre full noise spectrum correction:
+            param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=[np.max(disp_spect_amp_before_corr), 10., 1./250.])
+            print("Warning: Reverted to uncorrected displacement spectral fit for:",tr_disp.stats.station, ", due to potential issue with noise spectrum.")
+        Sigma_0 = param[0]
+        f_c =  param[1]
+        t_star = param[2]
+        Brune_model_spect_amp_fit = Brune_model(freq_displacement[1:], Sigma_0, f_c, t_star)
+        Sigma_0_stdev = np.sqrt(param_cov[0,0])
+        f_c_stdev = np.sqrt(param_cov[1,1])
+        t_star_stdev = np.sqrt(param_cov[2,2])
+    # Else calculate average long-period spectral level below manually specified corner frequency:
+    else:
+        # Find Sigma_0:
+        val, freq_max_idx = find_nearest(freq_displacement[1:],manual_fixed_fc_Hz)
+        if freq_max_idx > 1:
+            Sigma_0 = np.average(disp_spect_amp_before_corr[1:freq_max_idx])
+        else:
+            Sigma_0 = disp_spect_amp_before_corr[1]
+        # And artificially specify other parameters:
+        f_c = manual_fixed_fc_Hz
+        t_star = 1.0
+        Brune_model_spect_amp_fit = None
+        Sigma_0_stdev = 1.0
+        f_c_stdev = 1.0
+        t_star_stdev = 1.0
+        print("Note: Using manually specified corner frequency rather than fitting Brune model.")
+        
     # And plot some figures if specified:
     if plot_switch:
         # Print fitting parameters:
         print("Sigma_0:", Sigma_0, "f_c:", f_c, "t_star:", t_star)
         # And take FFT of displacement:
         # (Note: for comparison only)
-        freq_displacement2, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate) 
-        tr_displacement_data_freq_domain = np.sqrt(Pxx)
+        freq_displacement2, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate) 
+        tr_disp_data_freq_domain = np.sqrt(Pxx)
         # Integrate displacement to get the long period spectral level (total displacement*time):
         # (Note: Only used for plotting purposes, for comparision)
-        x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
-        y_data = np.abs(tr_displacement) # Absolute displacement data (Note: Absolute so that obtains area under displacement rather than just indefinite integral, to account for any negative overall displacement)
-        tr_displacement_area_with_time = numerically_integrate(x_data, y_data)
+        x_data = np.arange(0.0,len(tr_disp.data)/tr_disp.stats.sampling_rate,1./tr_disp.stats.sampling_rate) # Get time data
+        y_data = np.abs(tr_disp) # Absolute displacement data (Note: Absolute so that obtains area under displacement rather than just indefinite integral, to account for any negative overall displacement)
+        tr_disp_area_with_time = numerically_integrate(x_data, y_data)
         # And plot data:        
         fig, axes = plt.subplots(nrows=2, ncols=2)
         axes[0,0].plot(freq[1:], tr_data_freq_domain[1:])
@@ -440,27 +482,26 @@ def get_displacement_spectra_coeffs(tr, tr_noise=None, plot_switch=False, return
         axes[0,0].set_xlabel("Frequency (Hz)")
         axes[0,0].set_ylabel("Amplitude (m/s/Hz)")
         axes[0,0].set_title("Velocity spectrum")
-        axes[0,1].plot(x_data, tr_displacement/np.max(np.abs(tr_displacement)), label="Displacement")
-        axes[0,1].plot(x_data, tr.data/np.max(np.abs(tr.data)), label="Velocity")
-        axes[0,1].set_xlabel("Time (s)")
-        axes[0,1].set_ylabel("Amplitude (normallised)")
-        axes[0,1].set_title("Comparison of velocity and displacement")
+        # axes[0,1].plot(x_data, tr_disp/np.max(np.abs(tr_disp)), label="Displacement")
+        # axes[0,1].plot(x_data, tr.data/np.max(np.abs(tr.data)), label="Velocity")
+        # axes[0,1].set_xlabel("Time (s)")
+        # axes[0,1].set_ylabel("Amplitude (normallised)")
+        # axes[0,1].set_title("Comparison of velocity and displacement")
         # And take FFT of displacement:
-        freq_displacement, Pxx = periodogram(tr_displacement, fs=tr.stats.sampling_rate)
-        tr_displacement_data_freq_domain = np.sqrt(Pxx)
-        axes[1,0].plot(freq_displacement2[1:], tr_displacement_data_freq_domain[1:])
+        freq_displacement, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate)
+        tr_disp_data_freq_domain = np.sqrt(Pxx)
+        axes[1,0].plot(freq_displacement2[1:], tr_disp_data_freq_domain[1:])
         axes[1,0].plot(freq_displacement[1:], disp_spect_amp[1:], c='r')
         axes[1,0].plot(freq_displacement[1:], Brune_model_spect_amp_fit, c='g')
-        if tr_noise:
+        if tr_noise_disp:
             axes[1,0].plot(freq_displacement[1:], disp_spect_amp_no_noise[1:], c='k')
             axes[1,0].plot(freq_displacement[1:], disp_spect_amp_before_corr[1:], c='r')
-            
         axes[1,0].set_xscale("log", nonposx='clip')
         axes[1,0].set_yscale("log", nonposy='clip')
         axes[1,0].set_xlabel("Frequency (Hz)")
         axes[1,0].set_ylabel("Amplitude (m/Hz)")
         axes[1,0].set_title("Displacement spectrum")
-        axes[1,1].plot(x_data, tr_displacement_area_with_time)
+        axes[1,1].plot(x_data, tr_disp_area_with_time)
         axes[1,1].set_xlabel("Time (s)")
         axes[1,1].set_ylabel("Integrated displacement (m . s)")
         axes[1,1].set_title("Integrated dispacement")
@@ -472,14 +513,14 @@ def get_displacement_spectra_coeffs(tr, tr_noise=None, plot_switch=False, return
         spect_data_dict = {}
         spect_data_dict['FFT_disp_spectrum'] = {}
         spect_data_dict['FFT_disp_spectrum']['f'] = freq_displacement2[1:]
-        spect_data_dict['FFT_disp_spectrum']['A'] = tr_displacement_data_freq_domain[1:]
+        spect_data_dict['FFT_disp_spectrum']['A'] = tr_disp_data_freq_domain[1:]
         spect_data_dict['mtspec_disp_spectrum'] = {}
         spect_data_dict['mtspec_disp_spectrum']['f'] = freq_displacement[1:]
         spect_data_dict['mtspec_disp_spectrum']['A'] = disp_spect_amp[1:]
         spect_data_dict['Brune_model_fit_spectrum'] = {}
         spect_data_dict['Brune_model_fit_spectrum']['f'] = freq_displacement[1:]
         spect_data_dict['Brune_model_fit_spectrum']['A'] = Brune_model_spect_amp_fit
-        if tr_noise:
+        if tr_noise_disp:
             spect_data_dict['mtspec_disp_spectrum_pre_noise_removal'] = {}
             spect_data_dict['mtspec_disp_spectrum_pre_noise_removal']['f'] = freq_displacement[1:]
             spect_data_dict['mtspec_disp_spectrum_pre_noise_removal']['A'] = disp_spect_amp_before_corr[1:]
@@ -554,7 +595,7 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
 
 def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
                 window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], surf_inc_angle_rad=0., st=None, 
-                use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, plot_switch=False):
+                use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, manual_fixed_fc_Hz=None, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009. Note that input waveform mseed 
     data should be in velocity format for this version.
     Arguments:
@@ -589,6 +630,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
                             use_full_spectral_method is set to True. (Default = False) (bool)
     verbosity_level - Verbosity level of output. 1 for moment only, 2 for major parameters, 3 for plotting of traces. (defualt = 0) (int)
     return_spectra_data - If True, returns displacement spectrum data to output dict. Default is False. (bool)
+    manual_fixed_fc_Hz - If specified, will use this value as the corner frequency, in Hz, and approximate the long-period spectral level using the average spectral amplitude 
+    for frequencies less than this value. If this is specified then it overides the Brune model fit and doesn't use it. Default is None, i.e. Brune model is used instead. (None 
+    or float)
     plot_switch - Switches on plotting of analysis if True. Default is False (bool)
     Returns:
     seis_M_0 - The seismic moment in Nm (float)
@@ -649,53 +693,78 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             print("r (m):", r_m)
 
         # 4. Get displacement and therefroe long-period spectral level:
-        # Get and trim trace to approx. event only
+        # Get trace:
         if phase_to_process == 'P':
             tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
         elif phase_to_process == 'S':
             tr = st_inst_resp_corrected_rotated.select(station=station, component="T")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL S!!!
         if remove_noise_spectrum:
             tr_noise = tr.copy()
-        # Trim trace:
+        # Trim trace approximately (+/- 10 s around event) (for displacement calculation):
         try:
             phase_arrival_time = nonlinloc_hyp_file_data.phase_data[station][phase_to_process]['arrival_time']
         except KeyError:
             if verbosity_level > 0:
                 print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
             continue
-        tr.trim(starttime=phase_arrival_time-window_before_after[0], endtime=phase_arrival_time+window_before_after[1]).detrend('demean')
+        tr.trim(starttime=phase_arrival_time-(window_before_after[0]+10.0), endtime=phase_arrival_time+(window_before_after[1]+10.0)).detrend('demean')
         if len(tr) == 0:
             if verbosity_level > 0:
                 print("Cannot find sufficient data for station:",station,"therefore skipping this station.")
             continue
         if remove_noise_spectrum:
             event_origin_time = nonlinloc_hyp_file_data.origin_time
-            tr_noise.trim(starttime=event_origin_time-(window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate ), endtime=event_origin_time-window_before_after[0]).detrend('demean')
+            tr_noise.trim(starttime=event_origin_time-((window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate) + 10.0), endtime=event_origin_time-window_before_after[0]).detrend('demean')
             if len(tr_noise) > len(tr):
                 tr_noise.data = tr_noise.data[0:len(tr)]
             if not len(tr_noise.data) == len(tr.data):
                 print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
                 continue
-            
         if verbosity_level>=3:
             tr.plot()
+        # Convert trace to displacement with padding either side, before final trim:
+        tr_disp = integrate_trace_through_time(tr, detrend=True)
+        if remove_noise_spectrum:
+            tr_noise_disp = integrate_trace_through_time(tr_noise, detrend=True)
+        # Trim trace to final event duration:
+        try:
+            phase_arrival_time = nonlinloc_hyp_file_data.phase_data[station][phase_to_process]['arrival_time']
+        except KeyError:
+            if verbosity_level > 0:
+                print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
+            continue
+        tr_disp.trim(starttime=phase_arrival_time-window_before_after[0], endtime=phase_arrival_time+window_before_after[1]).detrend('demean')
+        if len(tr_disp) == 0:
+            if verbosity_level > 0:
+                print("Cannot find sufficient data for station:",station,"therefore skipping this station.")
+            continue
+        if remove_noise_spectrum:
+            event_origin_time = nonlinloc_hyp_file_data.origin_time
+            tr_noise_disp.trim(starttime=event_origin_time-(window_before_after[0] + float(len(tr_disp.data) - 1)/tr_disp.stats.sampling_rate ), endtime=event_origin_time-window_before_after[0]).detrend('demean')
+            if len(tr_noise_disp) > len(tr_disp):
+                tr_noise_disp.data = tr_noise_disp.data[0:len(tr_disp)]
+            if not len(tr_noise_disp.data) == len(tr_disp.data):
+                print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
+                continue
+        if verbosity_level>=3:
+            tr_disp.plot()
         # Check if there is no data in trace after trimming:
-        if len(tr.data) == 0:
+        if len(tr_disp.data) == 0:
             continue
         # And get spectral level from trace:
         if use_full_spectral_method:
             if remove_noise_spectrum:
                 if return_spectra_data:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr, tr_noise=tr_noise, plot_switch=plot_switch, return_spectra_data=return_spectra_data)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz)
                 else:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr, tr_noise=tr_noise, plot_switch=plot_switch)
-                del tr_noise
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz)
+                del tr_noise_disp
                 gc.collect()
             else:
                 if return_spectra_data:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch, return_spectra_data=return_spectra_data)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz)
                 else:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr, plot_switch=plot_switch)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz)
             long_period_spectral_level = Sigma_0
             approx_travel_time = r_m / Vp
             Q = np.abs(approx_travel_time / t_star)
@@ -703,7 +772,7 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             if verbosity_level>=2:
                 print("Spectral method fitted parameters:", "Sigma_0 =", Sigma_0, ", f_c = ", f_c, ", travel-time / Q = ", t_star, "Approx. Q = ", Q)
         else:
-            long_period_spectral_level = get_displacement_integrated_over_time(tr, plot_switch=plot_switch)
+            long_period_spectral_level = get_displacement_integrated_over_time(tr_disp, plot_switch=plot_switch)
             if verbosity_level>=2:
                 print("Long period spectral level:", long_period_spectral_level)
         
@@ -730,7 +799,7 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     
         # 8. Find attenuation factor:
         # Take FFT to get peak frequency:
-        freq, Pxx = periodogram(tr.data, fs=tr.stats.sampling_rate)
+        freq, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate)
         tr_data_freq_domain = np.sqrt(Pxx)
         f_peak_idx = np.argmax(tr_data_freq_domain)
         f_peak = freq[f_peak_idx]
