@@ -163,9 +163,12 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
 
         # 4. Get seismic moment:
         seis_moment, std_err_seis_M_0, n_obs, event_obs_dict = moment.calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process=phase_to_process, inventory_fname=inventory_fname, instruments_gain_filename=instruments_gain_filename, window_before_after=window_before_after, filt_freqs=filt_freqs, stations_not_to_process=stations_not_to_process, MT_six_tensor=MT_six_tensor, st=st, remove_noise_spectrum=remove_noise_spectrum, verbosity_level=verbosity_level, plot_switch=plot_switch)
-        seis_moment_stdev = std_err_seis_M_0*np.sqrt(n_obs) # Standard deviation of result
-        M_w = (2./3.)*np.log10(seis_moment) - 6.0
-        M_w_plus_err = ((2./3.)*np.log10(seis_moment+seis_moment_stdev) - 6.0) - M_w
+        # Calculate average Mw from all M_0 measurements:
+        M_ws_tmp = []
+        for station_tmp in list(event_obs_dict.keys()):
+            M_ws_tmp.append( 0.66 * np.log10(event_obs_dict[station_tmp]['M_0']) - 6.0 )
+        M_w = np.average(np.array(M_ws_tmp))
+        M_w_plus_err = np.std(np.array(M_ws_tmp))
         print("Moment magnitude and error:", M_w, "(+/-", M_w_plus_err, "for n_obs=", n_obs, ")")
         out_dict[NLLoc_event_hyp_filename] = event_obs_dict 
 
@@ -515,8 +518,7 @@ def calc_b_values_through_time_probabilistic(nonlinloc_fnames_time_sorted, mags_
             if mags_dict[nonlinloc_fname][station_tmp]['Q'] < Q_filt:
                     M_0s_tmp.append(mags_dict[nonlinloc_fname][station_tmp]['M_0'])
         M_0s_tmp = np.array(M_0s_tmp)
-        M_0_av = np.average(M_0s_tmp)
-        Mw_curr_event = (2. / 3.) * np.log10(M_0_av) - 6.0
+        Mw_curr_event = np.average((2. / 3.) * np.log10(M_0s_tmp) - 6.0)
         # Filter by upper limit:
         if Mw_curr_event < upper_Mw_filt:
             # Append fname and magnitude if the event meets the filter criteria:
