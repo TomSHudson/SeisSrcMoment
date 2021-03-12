@@ -432,10 +432,10 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
     if manual_fixed_fc_Hz==None:
         # Try with noise correction, and if fails, do without noise correction:
         try:
-            param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
+            param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.], bounds=([0, freq_displacement[1], 0], [np.inf, freq_displacement[-1], np.inf]))
         except RuntimeError:
             # If fails to solve, revert to pre full noise spectrum correction:
-            param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=[np.max(disp_spect_amp_before_corr), 10., 1./250.])
+            param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=[np.max(disp_spect_amp_before_corr), 10., 1./250.], bounds=([0, freq_displacement[1], 0], [np.inf, freq_displacement[-1], np.inf]))
             print("Warning: Reverted to uncorrected displacement spectral fit for:",tr_disp.stats.station, ", due to potential issue with noise spectrum.")
         Sigma_0 = param[0]
         f_c =  param[1]
