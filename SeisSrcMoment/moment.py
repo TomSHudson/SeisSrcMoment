@@ -369,7 +369,7 @@ def get_displacement_integrated_over_time(tr_disp, plot_switch=False):
     return long_period_spectral_level
 
 
-def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=False, return_spectra_data=False, manual_fixed_fc_Hz=None, apply_Brune_fit_bounds=False):
+def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=False, return_spectra_data=False, manual_fixed_fc_Hz=None, apply_Brune_fit_bounds=False, manual_fixed_t_star=None):
     """Function to get long-period spectral level, for calculating moment. Also finds the corner frequency and 
     travel-time / Q. Takes trace of component L as input, which has had the instrument response corrected and 
     been rotated such that the trace is alligned with the P wave arrival direction.
@@ -377,24 +377,12 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
     If manual_fixed_fc_Hz is specified then will take approximate long-period spectral level as the average amplitude 
     of the spectral amplitude below this frequency instead of fitting Brune model. Default is not to use this 
     (manual_fixed_fc_Hz=None) and fit a full Brune model.
-    If apply_Brune_fit_bounds=True, will apply physically meaningful Brune fit bounds for Omega_0, fc and t_star. Default is False."""
+    If apply_Brune_fit_bounds=True, will apply physically meaningful Brune fit bounds for Omega_0, fc and t_star. Default is False.
+    if is a float rather than None, will fix t_star in Brune fit and only fit for Omega_0 and f_c."""
     
     # Take FFT to get peak frequency:
     freq, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate)
     tr_data_freq_domain = np.sqrt(Pxx)
-    
-    # # Integrate trace to get displacement:
-    # Note: This is now done outside this function
-    # x_data = np.arange(0.0,len(tr.data)/tr.stats.sampling_rate,1./tr.stats.sampling_rate) # Get time data
-    # y_data = tr.data # Velocity data
-    # tr_disp = numerically_integrate(x_data, y_data)
-    # # And detrend displacement data:
-    # tr_disp_tmp = tr.copy()
-    # tr_disp_tmp.data = tr_disp
-    # tr_disp_tmp.detrend('demean')
-    # tr_disp = tr_disp_tmp.data
-    # del tr_disp_tmp
-    # gc.collect()
     
     # Get spectra of displacement (using multi-taper spectral analysis method):
     # (See: Thomson1982, Park1987, Prieto2009, Pozgay2009a for further details)
@@ -404,18 +392,6 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
     # Remove noise, if tr_noise specified:
     if tr_noise_disp:
         if len(tr_noise_disp.data) == len(tr_disp.data):
-            # # Integrate noise trace to get displacement:
-            # Note: This is now done outside this function
-            # x_data_noise = np.arange(0.0,len(tr_noise.data)/tr_noise.stats.sampling_rate,1./tr_noise.stats.sampling_rate) # Get time data
-            # y_data_noise = tr_noise.data # Velocity data
-            # tr_noise_disp = numerically_integrate(x_data_noise, y_data_noise)
-            # # And detrend displacement noise data:
-            # tr_disp_tmp = tr.copy()
-            # tr_disp_tmp.data = tr_noise_disp
-            # tr_disp_tmp.detrend('demean')
-            # tr_noise_disp = tr_disp_tmp.data
-            # del tr_disp_tmp
-            # gc.collect()
             # And get noise spectrum:
             Pxx_noise, freq_displacement_noise = mtspec(tr_noise_disp.data, delta=1./tr_noise_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
             disp_spect_amp_noise = np.sqrt(Pxx_noise)
@@ -431,19 +407,47 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
 
     # And fit Brune model:
     if manual_fixed_fc_Hz==None:
+        # Set Brune fit bounds:
+        # If fails to solve, revert to pre full noise spectrum correction:
+        if apply_Brune_fit_bounds:
+            bounds = ([0, freq_displacement[1], 0], [np.inf, freq_displacement[-1], np.inf])
+        else:
+            bounds = ([-np.inf, -np.inf, -np.inf], [np.inf, np.inf, np.inf])
+        p0 = [np.max(disp_spect_amp), 10., 1./250.] # Initial guess (to improve fit)
         # Try with noise correction, and if fails, do without noise correction:
         try:
-            if apply_Brune_fit_bounds:
-                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.], bounds=([0, freq_displacement[1], 0], [np.inf, freq_displacement[-1], np.inf]))
+            if manual_fixed_t_star:
+                # Reduce bounds as not varying t-star:
+                bounds = ([bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]])
+                p0 = p0[0:2]
+                # Fit Brune model with reduced degrees of freedom (i.e. fixed t-star):
+                param, param_cov = curve_fit(lambda f, Sigma_0, f_c: Brune_model(f, Sigma_0, f_c, manual_fixed_t_star), freq_displacement[1:], disp_spect_amp[1:], p0=p0, bounds=bounds)
+                param = np.append(param, manual_fixed_t_star)
+                param_cov_tmp = np.zeros((3,3))
+                param_cov_tmp[0:2,0:2] = param_cov
+                param_cov = param_cov_tmp
+                del param_cov_tmp
             else:
-                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=[np.max(disp_spect_amp), 10., 1./250.])
+                # Else fit Brune model with all parameters free:
+                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=p0, bounds=bounds)
+        # Else if fails with noise corection, do without noise correction (and warn user):
         except RuntimeError:
-            # If fails to solve, revert to pre full noise spectrum correction:
-            if apply_Brune_fit_bounds:
-                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=[np.max(disp_spect_amp_before_corr), 10., 1./250.], bounds=([0, freq_displacement[1], 0], [np.inf, freq_displacement[-1], np.inf]))
+            if manual_fixed_t_star:
+                # Reduce bounds as not varying t-star:
+                bounds = ([bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]])
+                p0 = p0[0:2]
+                # Fit Brune model with reduced degrees of freedom (i.e. fixed t-star):
+                param, param_cov = curve_fit(lambda f, Sigma_0, f_c: Brune_model(f, Sigma_0, f_c, manual_fixed_t_star), freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=p0, bounds=bounds)
+                param = np.append(param, manual_fixed_t_star)
+                param_cov_tmp = np.zeros((3,3))
+                param_cov_tmp[0:2,0:2] = param_cov
+                param_cov = param_cov_tmp
+                del param_cov_tmp
             else:
-                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=[np.max(disp_spect_amp_before_corr), 10., 1./250.])
+                # Else fit Brune model with all parameters free:
+                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=p0, bounds=bounds)
             print("Warning: Reverted to uncorrected displacement spectral fit for:",tr_disp.stats.station, ", due to potential issue with noise spectrum.")
+        # And get all key Brune fit parameters:
         Sigma_0 = param[0]
         f_c =  param[1]
         t_star = param[2]
@@ -600,10 +604,23 @@ def calc_const_freq_atten_factor(f_const_freq, Q, Vp, r_m):
     return atten_fact
 
 
+def find_Q_peak_freq_method(tr_vel, travel_time):
+    """Function to calcuate Q (and hence also t-star) via the peak frequency method of Eisner et al 2013.
+    Note: The trace seismic data in, tr_vel, must be a velocity time-series for this method to be vaild.
+    travel_time is the phase travel-time from source to receiver."""
+    # Find multi-taper velocity spectra:
+    Pxx, freq = mtspec(tr_vel.data, delta=1./tr_vel.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+    # Calculate Q, t_star from f_peak:
+    f_peak = freq[np.argmax(Pxx)]
+    t_star = 1. / (f_peak * np.pi)
+    Q = travel_time / t_star
+    return Q, t_star
+
+
 def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
                 window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], surf_inc_angle_rad=0., st=None, 
-                use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, manual_fixed_fc_Hz=None, apply_Brune_fit_bounds=False, 
-                plot_switch=False):
+                use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, manual_fixed_fc_Hz=None, manual_fixed_Q=None, 
+                apply_Brune_fit_bounds=False, calc_Q_independent_of_Brune=False, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009. Note that input waveform mseed 
     data should be in velocity format for this version.
     Arguments:
@@ -641,6 +658,11 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     manual_fixed_fc_Hz - If specified, will use this value as the corner frequency, in Hz, and approximate the long-period spectral level using the average spectral amplitude 
     for frequencies less than this value. If this is specified then it overides the Brune model fit and doesn't use it. Default is None, i.e. Brune model is used instead. (None 
     or float)
+    manual_fixed_Q - If specified, will use this value as the value of Q in the Brune model, setting this constant and inverting for Omega_0 and f_c only. This is only reccomended 
+                    if Q can be estimated well via another means. If manual_fixed_Q = None, then fits unconstrained Brune model. Default is None. (float)
+    calc_Q_independent_of_Brune - If True, automatically constrains Q by calculating it independently of the Brune model, using the peak frequency method of Eisner et al (2013). 
+                                    If this is True, it overides manual_fixed_Q. Note: This forces the Brune model to only fit for the long-period spectral level and corner frequency.
+                                    This option could be used for more reliable estimates of corner frequency than fitting an unconstrained Brune model. Default is False. (bool)
     apply_Brune_fit_bounds - If True, will apply physically meaningful Brune fit bounds for Omega_0, fc and t_star. Note that default is False since in some cases, applying 
                                 fit bounds causes the Brune model fit to fail. Default is False. (bool)
     plot_switch - Switches on plotting of analysis if True. Default is False (bool)
@@ -761,20 +783,32 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         # Check if there is no data in trace after trimming:
         if len(tr_disp.data) == 0:
             continue
+        # Get manually fixed t-star value if manual Q is specified:
+        if manual_fixed_Q:
+            manual_fixed_t_star = (phase_arrival_time - nonlinloc_hyp_file_data.origin_time) / manual_fixed_Q # I.e. t-star = t / Q
+        else:
+            manual_fixed_t_star = None # Else, do not manually fix t-star
+        # Or calculate Q independent of Brune model, if specified:
+        # Note: This forces the Brune model to only fit for the long-period spectral level and corner frequency.
+        if calc_Q_independent_of_Brune:
+            tr_vel = tr_disp.copy()
+            tr_vel.differentiate() 
+            Q_curr, t_star_curr = find_Q_peak_freq_method(tr_vel, travel_time)
+            manual_fixed_t_star = t_star_curr
         # And get spectral level from trace:
         if use_full_spectral_method:
             if remove_noise_spectrum:
                 if return_spectra_data:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
                 else:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
                 del tr_noise_disp
                 gc.collect()
             else:
                 if return_spectra_data:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
                 else:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
             long_period_spectral_level = Sigma_0
             approx_travel_time = r_m / Vp
             Q = np.abs(approx_travel_time / t_star)
