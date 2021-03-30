@@ -793,8 +793,10 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         if calc_Q_independent_of_Brune:
             tr_vel = tr_disp.copy()
             tr_vel.differentiate() 
+            travel_time = phase_arrival_time - nonlinloc_hyp_file_data.origin_time
             Q_curr, t_star_curr = find_Q_peak_freq_method(tr_vel, travel_time)
             manual_fixed_t_star = t_star_curr
+            print("***", Q_curr, t_star_curr, "***")
         # And get spectral level from trace:
         if use_full_spectral_method:
             if remove_noise_spectrum:
