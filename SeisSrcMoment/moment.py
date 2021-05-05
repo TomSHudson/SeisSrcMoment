@@ -539,7 +539,6 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
     else:
         return Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev
 
-
     
 def get_theta_and_phi_for_stations_from_NLLoc_event_hyp_data(nonlinloc_hyp_file_data, station):
     """Function to get theta and phi, in terms of lower hemisphere plot, for calculating radiation pattern components in other functions. Takes in NLLoc hyp file and station name, and returns theta and phi spherical coords."""

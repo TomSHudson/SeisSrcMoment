@@ -1,3 +1,5 @@
-SeisSrcMoment/__pycache__
+examples/vt_example_frequency_domain_lin_inv/inversion_options_diagram.pptx
+examples/**/.ipynb_checkpoints
+**/__pycache__
 SeisSrcMoment.egg-info
-examples/vt_example_entire_catalogue/.ipynb_checkpoints
+**/.DS_Store

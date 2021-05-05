@@ -6,3 +6,4 @@ __author__ = "Tom Hudson"
 __email__ = "thomas.hudson@earth.ox.ac.uk"
 import SeisSrcMoment.moment
 import SeisSrcMoment.catalogue
+import SeisSrcMoment.moment_linear_reg
