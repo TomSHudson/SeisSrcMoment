@@ -3,3 +3,5 @@ examples/**/.ipynb_checkpoints
 **/__pycache__
 SeisSrcMoment.egg-info
 **/.DS_Store
+examples/vt_example_frequency_domain_lin_inv/get_cut_mseed_data.ipynb
+examples/vt_example_frequency_domain_lin_inv/data/mseed_data/*.m

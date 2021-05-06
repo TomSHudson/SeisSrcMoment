@@ -124,74 +124,124 @@ def set_spectra_from_freq_inv_intervals(freq_inv_intervals, freq_disp, Axx_disp)
     return freq_disp_out, Axx_disp_out
 
 
-def prep_inv_objects(event_inv_params, inv_option):
-    """Function to prep. inversion objects (X, y) for current event."""
-    station_keys = list(event_inv_params.keys())
-    freq_inv_intervals = event_inv_params[station_keys[0]]['freq']
-    n_stations = len(station_keys)
-    n_freq_intervals = len(freq_inv_intervals)
-    n_obs_eqns = int( nCr(n_stations,2) * n_freq_intervals ) # Number of source-receiver pairs
+def prep_inv_objects(all_event_inv_params, inv_option):
+    """Function to prep. inversion objects (X, y) for many events."""
+    # Get events and stations keys for all events:
+    event_keys = list(all_event_inv_params.keys())
+    n_events = len(event_keys)
+    station_keys_all_events = []
+    for i in range(len(event_keys)):
+        event_inv_params = all_event_inv_params[event_keys[i]]
+        station_keys = list(event_inv_params.keys())
+        for j in range(len(station_keys)):
+            if not station_keys[j] in station_keys_all_events:
+                station_keys_all_events.append(station_keys[j])
+    n_stations_all_events = len(station_keys_all_events)
+    # Set number of overall parameters to solve for:    
     if inv_option == "method-1":
-        n_params = (1 * n_stations) # Invert for Q only
+        n_params = (n_stations_all_events * n_events) # Invert for Q only
     elif inv_option == "method-2":
-        n_params = (2 * n_stations) # Invert for kappa and Q
+        n_params = (n_stations_all_events * (n_events + 1)) # Invert for kappa (average over all events / station) and Q
     elif inv_option == "method-3":
-        n_params = (3 * n_stations) # Invert for kappa, R and Q
+        n_params = (n_stations_all_events * ((2 * n_events) + 1)) # Invert for kappa, R and Q
     elif inv_option == "method-4":
-        n_params = (3 * n_stations) + 1 # +1 for beta term. Invert for kappa, R, Q and beta
-    y = np.zeros(n_obs_eqns)
-    X = np.zeros((n_obs_eqns, n_params))
-    # Fill X and y:
-    row_count = 0
-    for ii in range(n_stations):
-        for jj in range(n_stations):
-            if ii < jj:
-                curr_start_row_idx = int(row_count * n_freq_intervals)
-                curr_end_row_idx = int((row_count * n_freq_intervals) + n_freq_intervals)
-                # Fill y for current set of frequencies:
-                if inv_option == "method-1" or inv_option == "method-2":
-                    y[curr_start_row_idx:curr_end_row_idx] = (np.log(event_inv_params[station_keys[ii]]['Axx_disp']) - np.log(event_inv_params[station_keys[jj]]['Axx_disp'])) - ((np.log(event_inv_params[station_keys[jj]]['r_m']) - np.log(event_inv_params[station_keys[ii]]['r_m'])) + (np.log(event_inv_params[station_keys[ii]]['R_term']) - np.log(event_inv_params[station_keys[jj]]['R_term']))) # (Note: Applies for method-1 or method-2 as kappa terms are set to zero if not inverting for kappa)
-                elif inv_option == "method-3":
-                    y[curr_start_row_idx:curr_end_row_idx] = (np.log(event_inv_params[station_keys[ii]]['Axx_disp']) - np.log(event_inv_params[station_keys[jj]]['Axx_disp'])) - (np.log(event_inv_params[station_keys[jj]]['r_m']) - np.log(event_inv_params[station_keys[ii]]['r_m']))
-                elif inv_option == "method-4":
-                    y[curr_start_row_idx:curr_end_row_idx] = np.log(event_inv_params[station_keys[ii]]['Axx_disp']) - np.log(event_inv_params[station_keys[jj]]['Axx_disp'])                        
-                # Fill X for current set of frequencies:
-                f_count = 0
-                for k in range(curr_start_row_idx, curr_end_row_idx):
-                    f_curr = event_inv_params[station_keys[ii]]['freq'][f_count]
-                    if inv_option == "method-1":
-                        first_receiver_start_idx = int(1 * ii)
-                        first_receiver_end_idx = int((1 * ii) + 1)
-                        second_receiver_start_idx = int(1 * jj)
-                        second_receiver_end_idx = int((1 * jj) + 1)
-                        # X values for first receiver:
-                        X[k, first_receiver_start_idx:first_receiver_end_idx] = -np.pi * f_curr * event_inv_params[station_keys[ii]]['tt_s']
-                        # X values for second receiver:
-                        X[k, second_receiver_start_idx:second_receiver_end_idx] = np.pi * f_curr * event_inv_params[station_keys[jj]]['tt_s']
-                    elif inv_option == "method-2":
-                        first_receiver_start_idx = int(2 * ii)
-                        first_receiver_end_idx = int((2 * ii) + 2)
-                        second_receiver_start_idx = int(2 * jj)
-                        second_receiver_end_idx = int((2 * jj) + 2)
-                        # X values for first receiver:
-                        X[k, first_receiver_start_idx:first_receiver_end_idx] = [-np.pi * f_curr * event_inv_params[station_keys[ii]]['tt_s'], -np.pi * f_curr]
-                        # X values for second receiver:
-                        X[k, second_receiver_start_idx:second_receiver_end_idx] = [np.pi * f_curr * event_inv_params[station_keys[jj]]['tt_s'], np.pi * f_curr]
-                    elif inv_option == "method-3" or inv_option == "method-4":
-                        first_receiver_start_idx = int(3 * ii)
-                        first_receiver_end_idx = int((3 * ii) + 3)
-                        second_receiver_start_idx = int(3 * jj)
-                        second_receiver_end_idx = int((3 * jj) + 3)
-                        # X values for first receiver:
-                        X[k, first_receiver_start_idx:first_receiver_end_idx] = [1, -np.pi * f_curr * event_inv_params[station_keys[ii]]['tt_s'], -np.pi * f_curr]
-                        # X values for second receiver:
-                        X[k, second_receiver_start_idx:second_receiver_end_idx] = [-1, np.pi * f_curr * event_inv_params[station_keys[jj]]['tt_s'], np.pi * f_curr]
-                        # And allocate X beta (geometrical spreading) term, if specified to invert for this:
-                        if inv_option == "method-4":
-                            X[k, -1] = (np.log(event_inv_params[station_keys[jj]]['r_m']) - np.log(event_inv_params[station_keys[ii]]['r_m']))
-                    f_count+=1
-                row_count += 1
-    return X, y
+        n_params = (n_stations_all_events * ((2 * n_events) + 1)) + 1 # +1 for beta term. Invert for kappa, R, Q and beta
+    # Setup overall X and y:
+    y_overall = np.empty(0)
+    X_overall = np.empty((0, n_params))
+    # Loop over each event:
+    for event_key in event_keys:
+        # Get event inv params for current event:
+        event_inv_params = all_event_inv_params[event_key]
+        station_keys = list(event_inv_params.keys())
+        n_stations = len(station_keys)
+        # Set other parameters fpr current event:
+        freq_inv_intervals = event_inv_params[station_keys[0]]['freq'] # (Assumes all frequencies for all events are the same)
+        n_freq_intervals = len(freq_inv_intervals)
+        n_obs_eqns = int( nCr(n_stations,2) * n_freq_intervals ) # Number of source-receiver pairs
+        y = np.zeros(n_obs_eqns)
+        X = np.zeros((n_obs_eqns, n_params))
+        # Fill X and y:
+        row_count = 0
+        for ii in range(n_stations):
+            for jj in range(n_stations):
+                if ii < jj:
+                    # Do some initial checks:
+                    try:
+                        if len(event_inv_params[station_keys[ii]]['freq']) > n_freq_intervals:
+                            event_inv_params[station_keys[ii]]['freq'] = event_inv_params[station_keys[ii]]['Axx_disp'][0:n_freq_intervals]
+                            event_inv_params[station_keys[ii]]['Axx_disp'] = event_inv_params[station_keys[ii]]['Axx_disp'][0:n_freq_intervals]
+                        if len(event_inv_params[station_keys[jj]]['freq']) > n_freq_intervals:
+                            event_inv_params[station_keys[jj]]['freq'] = event_inv_params[station_keys[jj]]['Axx_disp'][0:n_freq_intervals]
+                            event_inv_params[station_keys[jj]]['Axx_disp'] = event_inv_params[station_keys[jj]]['Axx_disp'][0:n_freq_intervals]      
+                    except KeyError:     
+                        print("Skipping station pair", ii, "-", jj, "as doesn't exist for current event")
+                        continue
+                    # Set row indices:
+                    curr_start_row_idx = int(row_count * n_freq_intervals)
+                    curr_end_row_idx = int((row_count * n_freq_intervals) + n_freq_intervals)
+                    # Fill y for current set of frequencies:
+                    if inv_option == "method-1" or inv_option == "method-2":
+                        y[curr_start_row_idx:curr_end_row_idx] = (np.log(event_inv_params[station_keys[ii]]['Axx_disp']) - np.log(event_inv_params[station_keys[jj]]['Axx_disp'])) - ((np.log(event_inv_params[station_keys[jj]]['r_m']) - np.log(event_inv_params[station_keys[ii]]['r_m'])) + (np.log(event_inv_params[station_keys[ii]]['R_term']) - np.log(event_inv_params[station_keys[jj]]['R_term']))) # (Note: Applies for method-1 or method-2 as kappa terms are set to zero if not inverting for kappa)
+                    elif inv_option == "method-3":
+                        y[curr_start_row_idx:curr_end_row_idx] = (np.log(event_inv_params[station_keys[ii]]['Axx_disp']) - np.log(event_inv_params[station_keys[jj]]['Axx_disp'])) - (np.log(event_inv_params[station_keys[jj]]['r_m']) - np.log(event_inv_params[station_keys[ii]]['r_m']))
+                    elif inv_option == "method-4":
+                        y[curr_start_row_idx:curr_end_row_idx] = np.log(event_inv_params[station_keys[ii]]['Axx_disp']) - np.log(event_inv_params[station_keys[jj]]['Axx_disp'])                        
+                    # Fill X for current set of frequencies:
+                    f_count = 0
+                    for k in range(curr_start_row_idx, curr_end_row_idx):
+                        # Get current frequency:
+                        f_curr = event_inv_params[station_keys[ii]]['freq'][f_count]
+                        # Get current receiver overall idx:
+                        first_receiver_overall_idx = station_keys_all_events.index(station_keys[ii])
+                        second_receiver_overall_idx = station_keys_all_events.index(station_keys[jj])
+                        # And get kappa idxs for receivers (used in methods 2,3,4 only):
+                        if inv_option == "method-2" or inv_option == "method-3":
+                            first_receiver_kappa_idx = (n_params - (n_stations_all_events - first_receiver_overall_idx)) - 1 # -1 due to python indexing
+                            second_receiver_kappa_idx = (n_params - (n_stations_all_events - second_receiver_overall_idx)) - 1 # -1 due to python indexing
+                        elif inv_option == "method-4":
+                            first_receiver_kappa_idx = (n_params - (n_stations_all_events - first_receiver_overall_idx)) - 2 # -2 due to beta term
+                            second_receiver_kappa_idx = (n_params - (n_stations_all_events - second_receiver_overall_idx)) - 2 # -2 due to beta term
+                        # And set parameters for X for both receivers:
+                        if inv_option == "method-1":
+                            # Q term for first receiver:
+                            X[k, first_receiver_overall_idx] = -np.pi * f_curr * event_inv_params[station_keys[ii]]['tt_s'] # Q term
+                            # Q term for second receiver:
+                            X[k, second_receiver_overall_idx] = np.pi * f_curr * event_inv_params[station_keys[jj]]['tt_s'] # Q term
+                        elif inv_option == "method-2":
+                            # Q term for first receiver:
+                            X[k, first_receiver_overall_idx] = -np.pi * f_curr * event_inv_params[station_keys[ii]]['tt_s'] # Q term
+                            # Q term for second receiver:
+                            X[k, second_receiver_overall_idx] = np.pi * f_curr * event_inv_params[station_keys[jj]]['tt_s'] # Q term
+                            # kappa term for first receiver:
+                            X[k, first_receiver_kappa_idx] = -np.pi * f_curr # kappa term
+                            # kapper term for second receiver:
+                            X[k, second_receiver_kappa_idx] = np.pi * f_curr # kappa term
+                        elif inv_option == "method-3" or inv_option == "method-4":
+                            # Write Q and R terms:
+                            first_receiver_start_idx = int(2 * first_receiver_overall_idx)
+                            first_receiver_end_idx = int((2 * first_receiver_overall_idx) + 2)
+                            second_receiver_start_idx = int(2 * second_receiver_overall_idx)
+                            second_receiver_end_idx = int((2 * second_receiver_overall_idx) + 2)
+                            # X values for first receiver:
+                            X[k, first_receiver_start_idx:first_receiver_end_idx] = [1, -np.pi * f_curr * event_inv_params[station_keys[ii]]['tt_s']] # R, Q terms
+                            # X values for second receiver:
+                            X[k, second_receiver_start_idx:second_receiver_end_idx] = [-1, np.pi * f_curr * event_inv_params[station_keys[jj]]['tt_s']] # R, Q terms
+                            # Write kappa terms:
+                            # kappa term for first receiver:
+                            X[k, first_receiver_kappa_idx] = -np.pi * f_curr # kappa term
+                            # kapper term for second receiver:
+                            X[k, second_receiver_kappa_idx] = np.pi * f_curr # kappa term
+                            # And allocate X beta (geometrical spreading) term, if specified to invert for this:
+                            if inv_option == "method-4":
+                                X[k, -1] = (np.log(event_inv_params[station_keys[jj]]['r_m']) - np.log(event_inv_params[station_keys[ii]]['r_m'])) # beta term
+                        f_count+=1
+                    row_count += 1
+        # And append X and y to X_overall and y_overall:
+        y_overall = np.concatenate((y_overall, y), axis=0)
+        X_overall = np.concatenate((X_overall, X), axis=0)
+
+    return X_overall, y_overall
 
 
 def run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0):
@@ -271,36 +321,162 @@ def run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point
         print("Successfully inverted for event spectral params (in ", n_iters, "iter)")
 
     if verbosity_level > 1:
-        print("Qs:", Qs_curr_event)
-        print("f_cs:", Qs_curr_event)
+        Qs_tmp = []
+        f_cs_tmp = []
+        for stat_tmp in list(event_obs_dict.keys()):
+            Qs_tmp.append(event_obs_dict[stat_tmp]['Q'])
+            f_cs_tmp.append(event_obs_dict[stat_tmp]['f_c'])
+        print("Qs:", Qs_tmp)
+        print("f_cs:", f_cs_tmp)
 
     return event_obs_dict
 
 
-def run_linear_inv_multi_event(X, y, event_inv_params_multi_events, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0):
+def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbosity_level=0):
     """Function to run linear inversion for single event.
-    Returns event_obs_dict"""
+    Returns event_obs_dict"""    
+    # Perform inversion based on inversion option:
+    if inv_option == "method-1":
+        # Lasso with regularisation path:
+        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = clf.fit(X, y)
+    elif inv_option == "method-2":
+        # Lasso with regularisation path:
+        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = clf.fit(X, y)
+    elif inv_option == "method-3":
+        # Lasso with regularisation path:
+        # (Note: Do not apply positive constraint as R terms can be negative)
+        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic')#, positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = clf.fit(X, y)
+    elif inv_option == "method-4":
+        # Lasso with regularisation path:
+        # (Note: Do not apply positive constraint as R terms and beta term can be negative)
+        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic')#, positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = clf.fit(X, y)
+    event_inv_outputs = clf.coef_
+
+    # Get inversion outputs:
+    # Setup inversion output info:
+    linear_moment_inv_outputs = {}
+    event_keys = list(all_event_inv_params.keys())
+    n_events = len(event_keys)
+    station_keys_all_events = []
+    for i in range(n_events):
+        event_inv_params = all_event_inv_params[event_keys[i]]
+        station_keys = list(event_inv_params.keys())
+        for j in range(len(station_keys)):
+            if not station_keys[j] in station_keys_all_events:
+                station_keys_all_events.append(station_keys[j])
+    n_stations_all_events = len(station_keys_all_events)
+    event_count = 0
+    # Loop over events, appending event outputs:
+    for i in range(n_events):
+        linear_moment_inv_outputs[event_keys[i]] = {}
+        linear_moment_inv_outputs[event_keys[i]]["stations"] = list(all_event_inv_params[event_keys[i]].keys())
+        n_stations = len(linear_moment_inv_outputs[event_keys[i]]["stations"])
+        if inv_option == "method-1" or inv_option == "method-2":
+            # Qs:
+            linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[(event_count * n_stations):(event_count * n_stations) + n_stations]
+        elif inv_option == "method-3" or inv_option == "method-4":
+            # Qs:
+            start_idx = (event_count * n_stations * 2)
+            end_idx = (event_count * n_stations * 2) + (2 * n_stations)
+            linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[start_idx:end_idx][0::2]
+            # R-terms:
+            linear_moment_inv_outputs[event_keys[i]]["Rs"] = 1. / event_inv_outputs[start_idx:end_idx][1::2]
+        event_count+=1
+    # And get kappas, if inverted for:
+    if inv_option == "method-2" or inv_option == "method-3":
+        # kappas:
+        linear_moment_inv_outputs["all_stations"] = station_keys_all_events
+        linear_moment_inv_outputs["all_kappas"] = event_inv_outputs[-n_stations_all_events:]
+    elif inv_option == "method-4":
+        # kappas:
+        linear_moment_inv_outputs["all_stations"] = station_keys_all_events
+        linear_moment_inv_outputs["all_kappas"] = event_inv_outputs[-(n_stations_all_events+1):-1]
+        # beta term:
+        linear_moment_inv_outputs["beta_term"] = event_inv_outputs[-1]
+
+    # And print any notifications:
+    if verbosity_level > 0:
+        n_iters = clf.n_iter_
+        print("Successfully inverted for event spectral params (in ", n_iters, "iter)")
+    
+    return linear_moment_inv_outputs
+
+def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0):
+    """Function to calculate fc by fitting Brune model to spectra with fixed Q."""
+    # Calculate f_c based on curve-fit of spectra with Brune model for fixed Q:
     # Setup some data outputs for current event:
     event_obs_dict = {}
 
-    # 1. Run inversion to find Q:
-    # Lasso with regularisation path:
-    n_cpu = 4
-    # clf = linear_model.LassoCV(alphas=[1., 0.1, 0.01, 0.001, 0.0001], max_iter=100000, n_jobs=n_cpu, selection='random', positive=True) # (Varies the regularisation value, alpha)
-    # clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='random')#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-    clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-    reg = clf.fit(X, y)
-    # print(reg.alphas_)
-    event_inv_outputs = clf.coef_
-    n_iters = clf.n_iter_
-    # rad_terms_curr_event = 1. / event_inv_outputs[0::3]
-    # Qs_curr_event = 1. / event_inv_outputs[1::3]
-    # kappas_curr_event = event_inv_outputs[2::3]
-    # print("Solution:", event_inv_outputs)
-    Qs_curr_event = 1. / event_inv_outputs
+    # Fit Brune model with reduced degrees of freedom (i.e. fixed t-star):
+    # Loop over stations:
+    station_keys = list(event_inv_params.keys())
+    for ii in range(len(station_keys)):
+        # Find f_c:
+        manual_fixed_Q = Qs_curr_event[ii]
+        if manual_fixed_Q > 0. and manual_fixed_Q < np.inf:
+            fixed_t_star = event_inv_params[station_keys[ii]]['tt_s'] / manual_fixed_Q
+            bounds = ([0, event_inv_params[station_keys[ii]]['freq'][1]], [np.inf, event_inv_params[station_keys[ii]]['freq'][-1]])
+            # Tweek amplitudes to improve least-squares fitting, and then reset:
+            disp_spect_amp_tmp = event_inv_params[station_keys[ii]]['Axx_disp'][1:] * (10**9)
+            param, param_cov = curve_fit(lambda f, Sigma_0, f_c: moment.Brune_model(f, Sigma_0, f_c, fixed_t_star), event_inv_params[station_keys[ii]]['freq'][1:], disp_spect_amp_tmp, p0=[np.max(disp_spect_amp_tmp), 10.], bounds=bounds)
+            param[0] = param[0] / (10**9)
+            # And if f_c inversion failed to resolve f_c:
+            if param[1] == 10.:
+                param[1] = 0.
+            # And append manually fixed t_star:
+            param = np.append(param, fixed_t_star)
+        # Else set all params to zero, if f_c inversion fails:
+        else:
+            param = np.zeros(3)
+            param_cov = np.zeros((2,2))
+        # And get parameters explicitely:
+        Sigma_0 = param[0]
+        t_star = fixed_t_star
+        f_c = param[1]
+        Q = manual_fixed_Q
+        Sigma_0_stdev = np.sqrt(param_cov[0,0])
+        f_c_stdev = np.sqrt(param_cov[1,1])
+        Q_stdev = 0. # Note that currently, do not calculate this value
+        t_star_stdev = 0. # Note that currently, do not calculate this value
+        # Calculate moment for current station:
+        r_m = event_inv_params[station_keys[ii]]['r_m']
+        C = moment.calc_constant_C(density, Vp, r_m, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad)
+        f_peak_idx = np.argmax(event_inv_params[station_keys[ii]]['Axx_disp'][1:])
+        f_peak = event_inv_params[station_keys[ii]]['freq'][1:][f_peak_idx]
+        atten_fact = moment.calc_const_freq_atten_factor(f_peak,Q,Vp,r_m)
+        seis_M_0 = np.abs(C*Sigma_0*atten_fact)
+        # And output parameters for each value:
+        event_obs_dict[station_keys[ii]] = {}
+        event_obs_dict[station_keys[ii]]['M_0'] = seis_M_0
+        event_obs_dict[station_keys[ii]]['Sigma_0'] = Sigma_0
+        event_obs_dict[station_keys[ii]]['f_c'] = f_c
+        event_obs_dict[station_keys[ii]]['t_star'] = t_star
+        event_obs_dict[station_keys[ii]]['Q'] = Q
+        event_obs_dict[station_keys[ii]]['Sigma_0_stdev'] = Sigma_0_stdev
+        event_obs_dict[station_keys[ii]]['f_c_stdev'] = f_c_stdev
+        event_obs_dict[station_keys[ii]]['t_star_stdev'] = t_star_stdev
+        event_obs_dict[station_keys[ii]]['Q_stdev'] = Q_stdev
+
+    if verbosity_level > 1:
+        Qs_tmp = []
+        f_cs_tmp = []
+        for stat_tmp in list(event_obs_dict.keys()):
+            Qs_tmp.append(event_obs_dict[stat_tmp]['Q'])
+            f_cs_tmp.append(event_obs_dict[stat_tmp]['f_c'])
+        print("Qs:", Qs_tmp)
+        print("f_cs:", f_cs_tmp)
+
+    return event_obs_dict
 
 
-def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
+
+
+
+def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
                 window_before_after=[0.004, 0.196], filt_freqs=[], stations_not_to_process=[], MT_data_filenames=[], MT_six_tensors=[], surf_inc_angle_rad=0., st=None, invert_for_geom_spreading=False,
                 num_events_per_inv=1, freq_inv_intervals=None, inv_option="method-1",
                 verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, plot_switch=False):
@@ -316,7 +492,6 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, stati
     mseed_filenames - List of of the mseed data to use. Note: This data should be velocity data for this current version. (str)
     NLLoc_event_hyp_filenames - List of the filenames of the nonlinloc location file containing the phase arrival information for the event. Must be in the same ordeer as 
                                 the events in <mseed_filenames>. (str)
-    stations_to_calculate_moment_for - List of station names to use for calculating the moment for (list of strs)
     density - Density of the medium (float)
     Vp - The velocity of the medium at the source (could be P or S phase velocity) (float)
     Note: Must also specify one of either inventory_fname or instruments_gain_filename (see optional args for more info)
@@ -405,6 +580,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, stati
     all_event_inv_params = {}
 
     # Loop over events:
+    initial_event_switch = True
     for i in range(len(NLLoc_event_hyp_filenames)):
         # Import mseed data, nonlinloc data:
         # Import nonlinloc data:
@@ -432,6 +608,10 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, stati
 
         # 3. Get various data for each source-receiver pair (for current event):
         station_count = 0
+        stations_to_calculate_moment_for = []
+        for tr in st_inst_resp_corrected_rotated:
+            if tr.stats.station not in stations_to_calculate_moment_for:
+                stations_to_calculate_moment_for.append(tr.stats.station)
         for station in stations_to_calculate_moment_for:
             if verbosity_level>0:
                 print("Processing data for station:", station)
@@ -581,40 +761,53 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, stati
                 freq_displacement, Axx_disp = set_spectra_from_freq_inv_intervals(freq_inv_intervals, freq_displacement, Axx_disp)
             # And append data for current station:
             event_inv_params[station] = {}
+            if initial_event_switch:
+                len_freqs_spectra = len(freq_displacement)
+                initial_event_switch = False
+            else:
+                if len(freq_displacement) < len_freqs_spectra:
+                    print("Skipping station as spectra of length less than usual.")
+                    continue
             event_inv_params[station]['freq'] = freq_displacement
             event_inv_params[station]['Axx_disp'] = Axx_disp
             event_inv_params[station]['r_m'] = r_m
             event_inv_params[station]['tt_s'] = tt_s
-            event_inv_params[station]['R_term'] = R_term_curr_station
+            if inv_option == "method-1" or inv_option == "method-2":
+                event_inv_params[station]['R_term'] = R_term_curr_station # Append R term, if required (method-1,-2)
             
             # And update station count:
             station_count+=1
         
-        # 4. Prep. inversion structures for current event:
-        # Prep. inversion objects:
-        X, y = prep_inv_objects(event_inv_params, inv_option)
-
-        # 5. Run inversion for single event (if method-1):
-        if inv_option == "method-1":
-            event_obs_dict = run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad, verbosity_level=verbosity_level)
-            # And append to overall obs. dict for all events (if solved for events individually):
-            event_obs_dicts[NLLoc_event_hyp_filename] = event_obs_dict
-
-        # 6. And append any data needed for multi-event analysis:
-        all_event_inv_params[NLLoc_event_hyp_filename] = event_inv_params
-        print
-
-
         # Clean up:
         del st_inst_resp_corrected_rotated, st_inst_resp_corrected, st
         gc.collect()
+        st = None # Reset st (as currently only supports single st)
+
+        # 4. Append any data needed for multi-event analysis:
+        # Check if 2 or more stations (as need >=2 stations for spectral ratios analysis),
+        # and append if satisfied:
+        if len(event_inv_params.keys()) > 1:
+            all_event_inv_params[NLLoc_event_hyp_filename] = event_inv_params
+        else:
+            print("Insufficient observations for spectral ratios, therefore skipping event", NLLoc_event_hyp_filename)
+            continue
+
+        # 5. And prep. inversion structures and run inversion for single event (if method-1):
+        if inv_option == "method-1":
+            event_inv_params_tmp = {}
+            event_inv_params_tmp[NLLoc_event_hyp_filename] = event_inv_params
+            X, y = prep_inv_objects(event_inv_params_tmp, inv_option)
+            event_obs_dict = run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad, verbosity_level=verbosity_level)
+            # And append to overall obs. dict for all events (if solved for events individually):
+            event_obs_dicts[NLLoc_event_hyp_filename] = event_obs_dict
         
         # ---------------- End: Process data for current event ----------------
     
     # And perform inversion for all events together (if inv_option = method-2, -3, -4):
-    # HERE!!!
-
-
+    if inv_option == "method-2" or inv_option == "method-3" or inv_option == "method-4":
+        X, y = prep_inv_objects(all_event_inv_params, inv_option)
+        linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbosity_level=verbosity_level)
+        print(linear_moment_inv_outputs)
 
         # # 10. Get overall average seismic moment and associated uncertainty:
         # seis_M_0_all_stations = np.array(seis_M_0_all_stations)

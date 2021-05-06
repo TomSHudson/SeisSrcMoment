@@ -1,0 +1,30 @@
+NLLOC "./loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20110622.074546.grid0" "LOCATED" "Location completed."
+SIGNATURE "Tom Hudson, University of Oxford   obs:obs/Uturuncu_XP_run002/20110622074520650000.nonlinloc   NLLoc:v7.00.00(27Oct2017)  run:27Feb2020 12h21m29"
+COMMENT "Control"
+GRID  240 240 121  -60 -60 -6.5  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 200000 smallestNodeSide 0.373437/0.373437/0.472656 oct_tree_integral 8.977416e+03 scatter_volume 8.610533e+03
+HYPOCENTER  x -7.53203 y -0.0632813 z 36.2754  OT 36.4373  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2011 06 22  07 45 36.437263  Lat -22.270555 Long -67.233080 Depth 36.275391
+QUALITY  Pmax 2.03431e+07 MFmin 4.21247 MFmax 7.20391 RMS 0.481537 Nphs 7 Gap 177.169 Dist 3.87833 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio -1  Npair 0  Diff -2e+30
+STATISTICS  ExpectX -19.8777 Y 2.37682 Z 41.9847  CovXX 156.763 XY -58.3285 XZ -33.2811 YY 133.366 YZ -1.06996 ZZ 93.7416 EllAz1  228.741 Dip1  -42.2325 Len1  15.1946 Az2  204.199 Dip2  45.0592 Len2  19.5551 Len3  2.723574e+01
+STAT_GEOG  ExpectLat -22.248421 Long -67.352835 Depth 41.984732
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -22.270000  LongOrig -67.160000  FirstStdParal -22.280000  SecondStdParal -22.260000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 10  usedPhCt 7  assocStaCt -1  usedStaCt 7  depthPhCt -1  stdErr 0.481537  azGap 177.169  secAzGap 223.612  gtLevel -  minDist 3.87833 maxDist 36.2001 medDist 20.3628
+QML_OriginUncertainty  horUnc -1  minHorUnc 14.0293  maxHorUnc 21.6905  azMaxHorUnc 129.33
+QML_ConfidenceEllipsoid  semiMajorAxisLength 27.2357  semiMinorAxisLength 15.1946  semiIntermediateAxisLength 19.5551  majorAxisPlunge -12.547  majorAxisAzimuth 127.085  majorAxisRotation 313.643
+FOCALMECH  Hyp  -22.270555 -67.233080 36.275391 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+PLBR   ?    ?    ? S      ? 20110622 0745   49.5176 GAU  1.02e-01 -1.00e+00 -1.00e+00 -1.00e+00 >   12.9184    0.1619    1.2854   -7.7901   -3.9330   -4.7950    3.8783 183.82 183.8 173.2  9     0.0000
+PLCM   ?    ?    ? S      ? 20110622 0745   49.4223 GAU  8.17e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   13.0441   -0.0591    1.3217   -4.6800    3.1110   -5.1500    4.2673  41.94  41.9 172.8  9     0.0000
+PLLL   ?    ?    ? S      ? 20110622 0745   50.7345 GAU  6.10e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   14.1387    0.1586    1.2627    1.0293  -16.6657   -4.7503   18.6798 152.72 152.7 153.7 10     0.0000
+PLSE   ?    ?    ? S      ? 20110622 0745   50.0573 GAU  7.52e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   14.3427   -0.7227    1.0553  -13.4022  -19.5616   -4.6799   20.3628 196.75 196.8 151.6 10     0.0000
+PL07   ?    ?    ? S      ? 20110622 0745   52.1156 GAU  3.74e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   15.1540    0.5244    1.0698   14.3650  -13.7157   -4.6414   25.8044 121.94 121.9 145.5 10     0.0000
+PLCO   ?    ?    ? S      ? 20110622 0745   48.4668 GAU  6.13e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   15.8552   -3.8256    0.0141  -28.5311  -21.2320   -4.6885   29.8173 224.77 224.8 141.5 10     0.0000
+PLRR   ?    ?    ? S      ? 20110622 0745   52.6551 GAU  6.36e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   17.0263   -0.8085    0.9909   28.6536    0.9591   -4.4805   36.2001  88.38  88.4 135.3 10     0.0000
+PLAN   ?    ?    ? S      ? 20110622 0745   49.7276 GAU  8.52e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -23.2922  -41.4887   -4.6967    0.0000   0.00 359.0  -1.0  0     0.0000
+PL03   ?    ?    ? S      ? 20110622 0745   51.4317 GAU  3.66e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   22.1889   28.1546   -4.6285    0.0000   0.00 359.0  -1.0  0     0.0000
+PLSQ   ?    ?    ? S      ? 20110622 0745   46.9331 GAU  5.09e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -49.2231  -16.6550   -4.8115    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC
+

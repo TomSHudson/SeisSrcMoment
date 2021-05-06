@@ -1,0 +1,31 @@
+NLLOC "./loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20110616.092554.grid0" "LOCATED" "Location completed."
+SIGNATURE "Tom Hudson, University of Oxford   obs:obs/Uturuncu_XP_run002/20110616092548390000.nonlinloc   NLLoc:v7.00.00(27Oct2017)  run:27Feb2020 12h20m33"
+COMMENT "Control"
+GRID  240 240 121  -60 -60 -6.5  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 200000 smallestNodeSide 0.186719/0.186719/0.236328 oct_tree_integral 1.344069e+03 scatter_volume 1.344069e+03
+HYPOCENTER  x 14.034 y -50.7574 z 10.6338  OT 48.4854  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2011 06 16  09 25 48.485442  Lat -22.728298 Long -67.023389 Depth 10.633789
+QUALITY  Pmax 3.90605e+12 MFmin 5.90137 MFmax 7.87108 RMS 0.104415 Nphs 8 Gap 323.335 Dist 27.0967 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio 1.73471  Npair 4  Diff 3.31358
+STATISTICS  ExpectX 13.9835 Y -51.4512 Z 7.2314  CovXX 13.8032 XY -1.32001 XZ -0.693696 YY 18.5123 YZ 21.5198 ZZ 58.5329 EllAz1  11.8952 Dip1  -22.8733 Len1  5.62283 Az2  279.581 Dip2  -5.46677 Len2  7.01955 Len3  1.548562e+01
+STAT_GEOG  ExpectLat -22.734563 Long -67.023875 Depth 7.231399
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -22.270000  LongOrig -67.160000  FirstStdParal -22.280000  SecondStdParal -22.260000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 11  usedPhCt 8  assocStaCt -1  usedStaCt 4  depthPhCt -1  stdErr 0.104415  azGap 323.335  secAzGap 323.335  gtLevel -  minDist 27.0967 maxDist 53.7432 medDist 36.7656
+QML_OriginUncertainty  horUnc -1  minHorUnc 5.56366  maxHorUnc 6.58568  azMaxHorUnc 165.362
+QML_ConfidenceEllipsoid  semiMajorAxisLength 15.4856  semiMinorAxisLength 5.62283  semiIntermediateAxisLength 7.01955  majorAxisPlunge -66.4093  majorAxisAzimuth 176.922  majorAxisRotation 99.4579
+FOCALMECH  Hyp  -22.728298 -67.023389 10.633789 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+PLAR   ?    ?    ? P      ? 20110616 0925   54.2545 GAU  2.28e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    5.8104   -0.0414    1.1973   18.7497  -24.0743   -4.6320   27.0967  10.02  10.0 127.7 10     0.0000
+PLAR   ?    ?    ? S      ? 20110616 0925   58.5942 GAU  3.25e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    9.9631    0.1456    1.0138   18.7497  -24.0743   -4.6320   27.0967  10.02  10.0 127.7 10     0.0000
+PLLL   ?    ?    ? P      ? 20110616 0925   55.8727 GAU  2.02e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    7.3872   -0.0000    1.1454    1.0293  -16.6657   -4.7503   36.4879 339.12 339.1 123.8 10     0.0000
+PLLL   ?    ?    ? S      ? 20110616 0926    1.3563 GAU  4.45e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   12.6670    0.2038    0.8897    1.0293  -16.6657   -4.7503   36.4879 339.12 339.1 123.9 10     0.0000
+PL07   ?    ?    ? P      ? 20110616 0925   55.9334 GAU  3.15e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    7.4751   -0.0272    1.1362   14.3650  -13.7157   -4.6414   37.0432   0.51   0.5 123.5 10     0.0000
+PL07   ?    ?    ? S      ? 20110616 0926    1.3128 GAU  2.91e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   12.8164    0.0110    0.9022   14.3650  -13.7157   -4.6414   37.0432   0.51   0.5 123.6 10     0.0000
+PLRR   ?    ?    ? P      ? 20110616 0925   58.9279 GAU  2.23e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   10.3791    0.0634    1.0082   28.6536    0.9591   -4.4805   53.7432  15.78  15.8 120.4 10     0.0000
+PLRR   ?    ?    ? S      ? 20110616 0926    6.5812 GAU  1.89e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   17.7873    0.3085    0.7073   28.6536    0.9591   -4.4805   53.7432  15.78  15.8 120.7 10     0.0000
+PLAN   ?    ?    ? P      ? 20110616 0925   55.6128 GAU  3.94e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -23.2922  -41.4887   -4.6967    0.0000   0.00 359.0  -1.0  0     0.0000
+PLTP   ?    ?    ? P      ? 20110616 0926    3.5628 GAU  2.52e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   38.5576   25.2769   -4.3881    0.0000   0.00 359.0  -1.0  0     0.0000
+PL03   ?    ?    ? S      ? 20110616 0926   14.1938 GAU  3.58e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   22.1889   28.1546   -4.6285    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC
+

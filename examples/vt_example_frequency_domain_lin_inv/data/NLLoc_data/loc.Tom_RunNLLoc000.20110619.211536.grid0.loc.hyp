@@ -1,0 +1,26 @@
+NLLOC "./loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20110619.211536.grid0" "LOCATED" "Location completed."
+SIGNATURE "Tom Hudson, University of Oxford   obs:obs/Uturuncu_XP_run002/20110619211530340000.nonlinloc   NLLoc:v7.00.00(27Oct2017)  run:27Feb2020 12h20m54"
+COMMENT "Control"
+GRID  240 240 121  -60 -60 -6.5  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 200016 smallestNodeSide 0.093359/0.093359/0.118164 oct_tree_integral 2.443985e+02 scatter_volume 2.425477e+02
+HYPOCENTER  x 9.97285 y 8.75918 z 2.53955  OT 36.5602  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2011 06 19  21 15 36.560160  Lat -22.190870 Long -67.063292 Depth 2.539551
+QUALITY  Pmax 7379.55 MFmin 2.665 MFmax 3.89552 RMS 0.0355354 Nphs 4 Gap 127.399 Dist 9.60964 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio -1  Npair 0  Diff -2e+30
+STATISTICS  ExpectX 18.3121 Y 19.4246 Z 14.2148  CovXX 116.943 XY 87.3707 XZ 67.7889 YY 266.075 YZ 41.6376 ZZ 222.042 EllAz1  109.905 Dip1  -17.2945 Len1  14.896 Az2  353.897 Dip2  -54.6224 Len2  26.4215 Len3  3.486936e+01
+STAT_GEOG  ExpectLat -22.094485 Long -66.982547 Depth 14.214767
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -22.270000  LongOrig -67.160000  FirstStdParal -22.280000  SecondStdParal -22.260000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 6  usedPhCt 4  assocStaCt -1  usedStaCt 4  depthPhCt -1  stdErr 0.0355354  azGap 127.399  secAzGap 189.196  gtLevel -  minDist 9.60964 maxDist 35.2813 medDist 31.5608
+QML_OriginUncertainty  horUnc -1  minHorUnc 13.2772  maxHorUnc 26.5454  azMaxHorUnc 24.7605
+QML_ConfidenceEllipsoid  semiMajorAxisLength 34.8694  semiMinorAxisLength 14.896  semiIntermediateAxisLength 26.4215  majorAxisPlunge 29.7891  majorAxisAzimuth 30.1721  majorAxisRotation 324.244
+FOCALMECH  Hyp  -22.190870 -67.063292 2.539551 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+PLDK   ?    ?    ? S      ? 20110619 2115   40.3491 GAU  2.24e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    3.7889   -0.0000    1.1451   18.7319   12.7120   -4.5524    9.6096  65.71  65.7 123.2  9     0.0000
+PLWB   ?    ?    ? S      ? 20110619 2115   46.1775 GAU  1.89e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    9.6608   -0.0435    0.9962   33.5070   -9.3046   -4.4915   29.6675 127.51 127.5  99.2  9     0.0000
+PLJR   ?    ?    ? S      ? 20110619 2115   47.3133 GAU  1.39e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   10.8020   -0.0488    0.9438  -19.4793   24.6258   -4.2437   33.4541 298.31 298.3  96.8  9     0.0000
+PLLA   ?    ?    ? S      ? 20110619 2115   47.9877 GAU  2.44e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   11.3647    0.0629    0.9149  -22.6264   -4.7336   -4.2420   35.2813 247.52 247.5  96.0  9     0.0000
+PLCL   ?    ?    ? P      ? 20110619 2115   36.1547 GAU  1.23e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   13.4947   40.2453   -4.3543    0.0000   0.00 359.0  -1.0  0     0.0000
+PLAN   ?    ?    ? P      ? 20110619 2115   46.3558 GAU  1.46e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -23.2922  -41.4887   -4.6967    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC
+

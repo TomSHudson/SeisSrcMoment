@@ -1,0 +1,30 @@
+NLLOC "./loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20110622.095604.grid0" "LOCATED" "Location completed."
+SIGNATURE "Tom Hudson, University of Oxford   obs:obs/Uturuncu_XP_run002/20110622095554770000.nonlinloc   NLLoc:v7.00.00(27Oct2017)  run:27Feb2020 12h21m32"
+COMMENT "Control"
+GRID  240 240 121  -60 -60 -6.5  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 200008 smallestNodeSide 0.373437/0.373437/0.472656 oct_tree_integral 3.073469e+03 scatter_volume 3.073469e+03
+HYPOCENTER  x -1.93047 y 0.310156 z 8.38867  OT 3.70843  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2011 06 22  09 56 3.708430  Lat -22.267198 Long -67.178730 Depth 8.388672
+QUALITY  Pmax 1.38942e+10 MFmin 7.84642 MFmax 9.35121 RMS 0.081769 Nphs 7 Gap 128.91 Dist 3.9249 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio -1  Npair 0  Diff -2e+30
+STATISTICS  ExpectX -33.1152 Y 23.0739 Z 37.7086  CovXX 140.962 XY -27.7992 XZ -91.3434 YY 125.922 YZ 44.7868 ZZ 119.341 EllAz1  287.326 Dip1  -50.0883 Len1  11.154 Az2  205.313 Dip2  6.62933 Len2  19.4362 Len3  2.934615e+01
+STAT_GEOG  ExpectLat -22.061308 Long -67.480827 Depth 37.708637
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -22.270000  LongOrig -67.160000  FirstStdParal -22.280000  SecondStdParal -22.260000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 10  usedPhCt 7  assocStaCt -1  usedStaCt 7  depthPhCt -1  stdErr 0.081769  azGap 128.91  secAzGap 191.971  gtLevel -  minDist 3.9249 maxDist 36.7187 medDist 18.5637
+QML_OriginUncertainty  horUnc -1  minHorUnc 15.5139  maxHorUnc 19.3172  azMaxHorUnc 127.431
+QML_ConfidenceEllipsoid  semiMajorAxisLength 29.3462  semiMinorAxisLength 11.154  semiIntermediateAxisLength 19.4362  majorAxisPlunge -39.1339  majorAxisAzimuth 120.739  majorAxisRotation 271.753
+FOCALMECH  Hyp  -22.267198 -67.178730 8.388672 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+PLCM   ?    ?    ? P      ? 20110622 0956    6.4154 GAU  2.24e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    2.6088    0.0981    1.4935   -4.6800    3.1110   -5.1500    3.9249 315.53 315.5 164.4  9     0.0000
+PLBR   ?    ?    ? P      ? 20110622 0956    6.4275 GAU  3.18e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    2.7820   -0.0629    1.6046   -7.7901   -3.9330   -4.7950    7.2346 234.09 234.1 153.9  9     0.0000
+PLMN   ?    ?    ? P      ? 20110622 0956    7.0055 GAU  7.68e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    3.3963   -0.0992    1.4770    4.0539   12.1026   -4.5125   13.2240  26.91  26.9 137.1  9     0.0000
+PLQU   ?    ?    ? P      ? 20110622 0956    4.7227 GAU  1.92e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    4.1317   -3.1174    0.0000  -18.4486    8.7814   -4.1525   18.5637 297.15 297.2 128.2  9     0.0000
+PLJR   ?    ?    ? P      ? 20110622 0956    4.1585 GAU  2.88e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    6.0023   -5.5522    0.0000  -19.4793   24.6258   -4.2437   29.9868 324.18 324.2 120.2  9     0.0000
+PLRR   ?    ?    ? P      ? 20110622 0956    9.8751 GAU  4.27e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    6.1219    0.0448    1.2736   28.6536    0.9591   -4.4805   30.5910  88.78  88.8 120.1  9     0.0000
+PLWB   ?    ?    ? P      ? 20110622 0956   10.9445 GAU  4.69e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    7.1723    0.0637    1.1514   33.5070   -9.3046   -4.4915   36.7187 105.18 105.2 117.9  9     0.0000
+PLAN   ?    ?    ? P      ? 20110622 0956    6.3686 GAU  2.11e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -23.2922  -41.4887   -4.6967    0.0000   0.00 359.0  -1.0  0     0.0000
+PL03   ?    ?    ? P      ? 20110622 0956    8.8166 GAU  4.31e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   22.1889   28.1546   -4.6285    0.0000   0.00 359.0  -1.0  0     0.0000
+PLCL   ?    ?    ? P      ? 20110622 0956    7.5580 GAU  2.80e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   13.4947   40.2453   -4.3543    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC
+

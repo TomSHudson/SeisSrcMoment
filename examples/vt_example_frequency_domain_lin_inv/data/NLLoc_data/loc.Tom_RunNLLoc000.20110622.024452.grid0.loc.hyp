@@ -1,0 +1,30 @@
+NLLOC "./loc/Uturuncu_XP_run002/loc.Tom_RunNLLoc000.20110622.024452.grid0" "LOCATED" "Location completed."
+SIGNATURE "Tom Hudson, University of Oxford   obs:obs/Uturuncu_XP_run002/20110622024443130000.nonlinloc   NLLoc:v7.00.00(27Oct2017)  run:27Feb2020 12h21m22"
+COMMENT "Control"
+GRID  240 240 121  -60 -60 -6.5  0.5 0.5 0.5 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 200016 smallestNodeSide 0.373437/0.373437/0.472656 oct_tree_integral 9.654202e+03 scatter_volume 9.615782e+03
+HYPOCENTER  x -43.7555 y 18.6086 z 37.2207  OT 44.0415  ix -1 iy -1 iz -1 MAXIMUM_LIKELIHOOD
+GEOGRAPHIC  OT 2011 06 22  02 44 44.041518  Lat -22.101397 Long -67.584033 Depth 37.220703
+QUALITY  Pmax 1.11988e+07 MFmin 4.0041 MFmax 7.09955 RMS 0.30095 Nphs 6 Gap 276.993 Dist 25.0108 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio -1  Npair 0  Diff -2e+30
+STATISTICS  ExpectX -38.8076 Y 25.8698 Z 35.8235  CovXX 210.358 XY 88.482 XZ -58.9823 YY 124.374 YZ 22.0871 ZZ 160.032 EllAz1  143.334 Dip1  24.8543 Len1  12.708 Az2  186.671 Dip2  -57.5082 Len2  24.471 Len3  3.140375e+01
+STAT_GEOG  ExpectLat -22.035940 Long -67.535908 Depth 35.823498
+TRANSFORM  LAMBERT RefEllipsoid WGS-84  LatOrig -22.270000  LongOrig -67.160000  FirstStdParal -22.280000  SecondStdParal -22.260000  RotCW 0.000000
+QML_OriginQuality  assocPhCt 10  usedPhCt 6  assocStaCt -1  usedStaCt 6  depthPhCt -1  stdErr 0.30095  azGap 276.993  secAzGap 316.998  gtLevel -  minDist 25.0108 maxDist 74.529 medDist 42.3434
+QML_OriginUncertainty  horUnc -1  minHorUnc 12.5969  maxHorUnc 24.7225  azMaxHorUnc 57.9571
+QML_ConfidenceEllipsoid  semiMajorAxisLength 31.4037  semiMinorAxisLength 12.708  semiIntermediateAxisLength 24.471  majorAxisPlunge -19.5429  majorAxisAzimuth 62.7979  majorAxisRotation 32.7
+FOCALMECH  Hyp  -22.101397 -67.584033 37.220703 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+PLJR   ?    ?    ? P      ? 20110622 0244   52.5076 GAU  3.48e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    8.6483   -0.1822    1.1292  -19.4793   24.6258   -4.2437   25.0108  76.08  76.1 145.6 10     0.0000
+PLSM   ?    ?    ? P      ? 20110622 0244   53.4308 GAU  1.93e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    9.2211    0.1682    1.1220  -12.8358   17.3797   -4.2160   30.9441  92.28  92.3 139.3 10     0.0000
+PLCM   ?    ?    ? P      ? 20110622 0244   55.0872 GAU  2.41e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   10.6201    0.4256    0.9360   -4.6800    3.1110   -5.1500   42.0365 111.63 111.6 129.4 10     0.0000
+PLCO   ?    ?    ? P      ? 20110622 0244   54.5569 GAU  5.79e-03 -1.00e+00 -1.00e+00 -1.00e+00 >   10.6343   -0.1189    1.1048  -28.5311  -21.2320   -4.6885   42.6504 159.09 159.1 128.5 10     0.0000
+PL07   ?    ?    ? P      ? 20110622 0244   58.0320 GAU  2.52e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   13.9150    0.0754    1.0030   14.3650  -13.7157   -4.6414   66.5045 119.08 119.1 113.0 10     0.0000
+PLRR   ?    ?    ? P      ? 20110622 0244   58.3943 GAU  2.37e-02 -1.00e+00 -1.00e+00 -1.00e+00 >   15.0896   -0.7368    0.7049   28.6536    0.9591   -4.4805   74.5290 103.70 103.7 109.4 10     0.0000
+PLSQ   ?    ?    ? P      ? 20110622 0244   54.0514 GAU  2.10e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -49.2231  -16.6550   -4.8115    0.0000   0.00 359.0  -1.0  0     0.0000
+PLAN   ?    ?    ? P      ? 20110622 0244   56.1128 GAU  4.60e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000  -23.2922  -41.4887   -4.6967    0.0000   0.00 359.0  -1.0  0     0.0000
+PL03   ?    ?    ? P      ? 20110622 0244   56.9165 GAU  3.98e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   22.1889   28.1546   -4.6285    0.0000   0.00 359.0  -1.0  0     0.0000
+PLCL   ?    ?    ? P      ? 20110622 0244   55.3709 GAU  5.32e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.0000    0.0000    0.0000   13.4947   40.2453   -4.3543    0.0000   0.00 359.0  -1.0  0     0.0000
+END_PHASE
+END_NLLOC
+
