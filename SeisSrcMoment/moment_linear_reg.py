@@ -289,14 +289,16 @@ def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbo
         n_stations = len(linear_moment_inv_outputs[event_keys[i]]["stations"])
         if inv_option == "method-1" or inv_option == "method-2":
             # Qs:
-            linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[(event_count * n_stations):(event_count * n_stations) + n_stations]
+            with np.errstate(divide='ignore'):
+                linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[(event_count * n_stations):(event_count * n_stations) + n_stations]
         elif inv_option == "method-3" or inv_option == "method-4":
             # Qs:
             start_idx = (event_count * n_stations * 2)
             end_idx = (event_count * n_stations * 2) + (2 * n_stations)
-            linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[start_idx:end_idx][0::2]
+            with np.errstate(divide='ignore'):
+                linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[start_idx:end_idx][0::2]
             # R-terms:
-            linear_moment_inv_outputs[event_keys[i]]["Rs"] = 1. / event_inv_outputs[start_idx:end_idx][1::2]
+            linear_moment_inv_outputs[event_keys[i]]["Rs"] = np.exp(event_inv_outputs[start_idx:end_idx][1::2])
         event_count+=1
     # And get kappas, if inverted for:
     if inv_option == "method-2" or inv_option == "method-3":
