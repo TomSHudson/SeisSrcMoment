@@ -358,7 +358,10 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
         # Calculate moment for current station:
         r_m = event_inv_params[station_keys[ii]]['r_m']
         if type(A_rad_point) is not float:
-            A_rad_point_curr = A_rad_point[ii]
+            if type(A_rad_point) is not np.float64:
+                A_rad_point_curr = A_rad_point[ii]
+            else:
+                A_rad_point_curr = A_rad_point
         else:
             A_rad_point_curr = A_rad_point
         C = moment.calc_constant_C(density, Vp, r_m, A_rad_point_curr, surf_inc_angle_rad=surf_inc_angle_rad)
@@ -637,6 +640,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                     MT_data_filename = MT_data_filenames[i]
                 elif len(MT_six_tensors)>0:
                     MT_six_tensor = MT_six_tensors[i]
+                    MT_data_filename = None
                 else:
                     MT_data_filename = None
                     MT_six_tensor = []
@@ -654,6 +658,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                 if MT_data_filename or len(MT_six_tensor)>0:
                     theta, phi = moment.get_theta_and_phi_for_stations_from_NLLoc_event_hyp_data(nonlinloc_hyp_file_data, station)
                     A_rad_point = moment.get_normallised_rad_pattern_point_amplitude(theta, phi, full_MT_max_prob)
+                    A_rad_point = np.abs(A_rad_point) # (and take absolute value, as only an amplitude)
                 else:
                     # Else use average radiation pattern:
                     if phase_to_process == 'P':
