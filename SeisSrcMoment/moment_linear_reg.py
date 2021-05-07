@@ -169,10 +169,10 @@ def prep_inv_objects(all_event_inv_params, inv_option):
                     # Do some initial checks:
                     try:
                         if len(event_inv_params[station_keys[ii]]['freq']) > n_freq_intervals:
-                            event_inv_params[station_keys[ii]]['freq'] = event_inv_params[station_keys[ii]]['Axx_disp'][0:n_freq_intervals]
+                            event_inv_params[station_keys[ii]]['freq'] = event_inv_params[station_keys[ii]]['freq'][0:n_freq_intervals]
                             event_inv_params[station_keys[ii]]['Axx_disp'] = event_inv_params[station_keys[ii]]['Axx_disp'][0:n_freq_intervals]
                         if len(event_inv_params[station_keys[jj]]['freq']) > n_freq_intervals:
-                            event_inv_params[station_keys[jj]]['freq'] = event_inv_params[station_keys[jj]]['Axx_disp'][0:n_freq_intervals]
+                            event_inv_params[station_keys[jj]]['freq'] = event_inv_params[station_keys[jj]]['freq'][0:n_freq_intervals]
                             event_inv_params[station_keys[jj]]['Axx_disp'] = event_inv_params[station_keys[jj]]['Axx_disp'][0:n_freq_intervals]      
                     except KeyError:     
                         print("Skipping station pair", ii, "-", jj, "as doesn't exist for current event")
@@ -242,94 +242,6 @@ def prep_inv_objects(all_event_inv_params, inv_option):
         X_overall = np.concatenate((X_overall, X), axis=0)
 
     return X_overall, y_overall
-
-
-def run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0):
-    """Function to run linear inversion for single event.
-    Returns event_obs_dict"""
-    # Setup some data outputs for current event:
-    event_obs_dict = {}
-
-    # 1. Run inversion to find Q:
-    # Lasso with regularisation path:
-    n_cpu = 4
-    # clf = linear_model.LassoCV(alphas=[1., 0.1, 0.01, 0.001, 0.0001], max_iter=100000, n_jobs=n_cpu, selection='random', positive=True) # (Varies the regularisation value, alpha)
-    # clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='random')#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-    clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-    reg = clf.fit(X, y)
-    # print(reg.alphas_)
-    event_inv_outputs = clf.coef_
-    n_iters = clf.n_iter_
-    # rad_terms_curr_event = 1. / event_inv_outputs[0::3]
-    # Qs_curr_event = 1. / event_inv_outputs[1::3]
-    # kappas_curr_event = event_inv_outputs[2::3]
-    # print("Solution:", event_inv_outputs)
-    Qs_curr_event = 1. / event_inv_outputs
-
-    # 2. Calculate f_c based on curve-fit of spectra with Brune model for fixed Q, found above:
-    # Fit Brune model with reduced degrees of freedom (i.e. fixed t-star):
-    # Loop over stations:
-    station_keys = list(event_inv_params.keys())
-    for ii in range(len(station_keys)):
-        # Find f_c:
-        manual_fixed_Q = Qs_curr_event[ii]
-        if manual_fixed_Q > 0. and manual_fixed_Q < np.inf:
-            fixed_t_star = event_inv_params[station_keys[ii]]['tt_s'] / manual_fixed_Q
-            bounds = ([0, event_inv_params[station_keys[ii]]['freq'][1]], [np.inf, event_inv_params[station_keys[ii]]['freq'][-1]])
-            # Tweek amplitudes to improve least-squares fitting, and then reset:
-            disp_spect_amp_tmp = event_inv_params[station_keys[ii]]['Axx_disp'][1:] * (10**9)
-            param, param_cov = curve_fit(lambda f, Sigma_0, f_c: moment.Brune_model(f, Sigma_0, f_c, fixed_t_star), event_inv_params[station_keys[ii]]['freq'][1:], disp_spect_amp_tmp, p0=[np.max(disp_spect_amp_tmp), 10.], bounds=bounds)
-            param[0] = param[0] / (10**9)
-            # And if f_c inversion failed to resolve f_c:
-            if param[1] == 10.:
-                param[1] = 0.
-            # And append manually fixed t_star:
-            param = np.append(param, fixed_t_star)
-        # Else set all params to zero, if f_c inversion fails:
-        else:
-            param = np.zeros(3)
-            param_cov = np.zeros((2,2))
-        # And get parameters explicitely:
-        Sigma_0 = param[0]
-        t_star = fixed_t_star
-        f_c = param[1]
-        Q = manual_fixed_Q
-        Sigma_0_stdev = np.sqrt(param_cov[0,0])
-        f_c_stdev = np.sqrt(param_cov[1,1])
-        Q_stdev = 0. # Note that currently, do not calculate this value
-        t_star_stdev = 0. # Note that currently, do not calculate this value
-        # Calculate moment for current station:
-        r_m = event_inv_params[station_keys[ii]]['r_m']
-        C = moment.calc_constant_C(density, Vp, r_m, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad)
-        f_peak_idx = np.argmax(event_inv_params[station_keys[ii]]['Axx_disp'][1:])
-        f_peak = event_inv_params[station_keys[ii]]['freq'][1:][f_peak_idx]
-        atten_fact = moment.calc_const_freq_atten_factor(f_peak,Q,Vp,r_m)
-        seis_M_0 = np.abs(C*Sigma_0*atten_fact)
-        # And output parameters for each value:
-        event_obs_dict[station_keys[ii]] = {}
-        event_obs_dict[station_keys[ii]]['M_0'] = seis_M_0
-        event_obs_dict[station_keys[ii]]['Sigma_0'] = Sigma_0
-        event_obs_dict[station_keys[ii]]['f_c'] = f_c
-        event_obs_dict[station_keys[ii]]['t_star'] = t_star
-        event_obs_dict[station_keys[ii]]['Q'] = Q
-        event_obs_dict[station_keys[ii]]['Sigma_0_stdev'] = Sigma_0_stdev
-        event_obs_dict[station_keys[ii]]['f_c_stdev'] = f_c_stdev
-        event_obs_dict[station_keys[ii]]['t_star_stdev'] = t_star_stdev
-        event_obs_dict[station_keys[ii]]['Q_stdev'] = Q_stdev
-    
-    if verbosity_level > 0:
-        print("Successfully inverted for event spectral params (in ", n_iters, "iter)")
-
-    if verbosity_level > 1:
-        Qs_tmp = []
-        f_cs_tmp = []
-        for stat_tmp in list(event_obs_dict.keys()):
-            Qs_tmp.append(event_obs_dict[stat_tmp]['Q'])
-            f_cs_tmp.append(event_obs_dict[stat_tmp]['f_c'])
-        print("Qs:", Qs_tmp)
-        print("f_cs:", f_cs_tmp)
-
-    return event_obs_dict
 
 
 def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbosity_level=0):
@@ -433,6 +345,7 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
         else:
             param = np.zeros(3)
             param_cov = np.zeros((2,2))
+            fixed_t_star = 0.0
         # And get parameters explicitely:
         Sigma_0 = param[0]
         t_star = fixed_t_star
@@ -444,7 +357,11 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
         t_star_stdev = 0. # Note that currently, do not calculate this value
         # Calculate moment for current station:
         r_m = event_inv_params[station_keys[ii]]['r_m']
-        C = moment.calc_constant_C(density, Vp, r_m, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad)
+        if type(A_rad_point) is not float:
+            A_rad_point_curr = A_rad_point[ii]
+        else:
+            A_rad_point_curr = A_rad_point
+        C = moment.calc_constant_C(density, Vp, r_m, A_rad_point_curr, surf_inc_angle_rad=surf_inc_angle_rad)
         f_peak_idx = np.argmax(event_inv_params[station_keys[ii]]['Axx_disp'][1:])
         f_peak = event_inv_params[station_keys[ii]]['freq'][1:][f_peak_idx]
         atten_fact = moment.calc_const_freq_atten_factor(f_peak,Q,Vp,r_m)
@@ -471,9 +388,6 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
         print("f_cs:", f_cs_tmp)
 
     return event_obs_dict
-
-
-
 
 
 def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
@@ -734,7 +648,8 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                 elif len(MT_six_tensor)>0:
                     full_MT_max_prob = moment.get_full_MT_array(MT_six_tensor)
                 else:
-                    print("Warning: Need to specify MT_six_tensor or MT_data_filename for accurate radiation pattern correction. \n Using average radiation pattern value instead.")
+                    if verbosity_level > 0:
+                        print("Warning: Need to specify MT_six_tensor or MT_data_filename for accurate radiation pattern correction. \n Using average radiation pattern value instead.")
                 # And get radiation pattern amplitide from moment tensor, or average radiation pattern:
                 if MT_data_filename or len(MT_six_tensor)>0:
                     theta, phi = moment.get_theta_and_phi_for_stations_from_NLLoc_event_hyp_data(nonlinloc_hyp_file_data, station)
@@ -760,7 +675,6 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
             if not (freq_inv_intervals is None):
                 freq_displacement, Axx_disp = set_spectra_from_freq_inv_intervals(freq_inv_intervals, freq_displacement, Axx_disp)
             # And append data for current station:
-            event_inv_params[station] = {}
             if initial_event_switch:
                 len_freqs_spectra = len(freq_displacement)
                 initial_event_switch = False
@@ -768,6 +682,10 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                 if len(freq_displacement) < len_freqs_spectra:
                     print("Skipping station as spectra of length less than usual.")
                     continue
+            if freq_displacement[1] > freq_displacement[-1]:
+                print("Skipping station as spectra behaviour odd.")
+                continue
+            event_inv_params[station] = {}
             event_inv_params[station]['freq'] = freq_displacement
             event_inv_params[station]['Axx_disp'] = Axx_disp
             event_inv_params[station]['r_m'] = r_m
@@ -787,17 +705,24 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         # Check if 2 or more stations (as need >=2 stations for spectral ratios analysis),
         # and append if satisfied:
         if len(event_inv_params.keys()) > 1:
-            all_event_inv_params[NLLoc_event_hyp_filename] = event_inv_params
+            all_event_inv_params[NLLoc_event_hyp_filename] = event_inv_params.copy()
         else:
             print("Insufficient observations for spectral ratios, therefore skipping event", NLLoc_event_hyp_filename)
+            del event_inv_params
             continue
 
         # 5. And prep. inversion structures and run inversion for single event (if method-1):
         if inv_option == "method-1":
+            # Prep. for inversion:
             event_inv_params_tmp = {}
-            event_inv_params_tmp[NLLoc_event_hyp_filename] = event_inv_params
+            event_inv_params_tmp[NLLoc_event_hyp_filename] = event_inv_params.copy()
             X, y = prep_inv_objects(event_inv_params_tmp, inv_option)
-            event_obs_dict = run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad, verbosity_level=verbosity_level)
+            # Run linear inversion to find Q:
+            # event_obs_dict = run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad, verbosity_level=verbosity_level)
+            linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, event_inv_params_tmp, n_cpu=4, verbosity_level=verbosity_level)
+            # And find fc from fixed Q:
+            Qs_curr_event = linear_moment_inv_outputs[NLLoc_event_hyp_filename]["Qs"]
+            event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
             # And append to overall obs. dict for all events (if solved for events individually):
             event_obs_dicts[NLLoc_event_hyp_filename] = event_obs_dict
         
@@ -805,22 +730,30 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
     
     # And perform inversion for all events together (if inv_option = method-2, -3, -4):
     if inv_option == "method-2" or inv_option == "method-3" or inv_option == "method-4":
+        # Prep. inversion objects:
         X, y = prep_inv_objects(all_event_inv_params, inv_option)
+        # Perform inversion to find Q and other params:
         linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbosity_level=verbosity_level)
-        print(linear_moment_inv_outputs)
 
-        # # 10. Get overall average seismic moment and associated uncertainty:
-        # seis_M_0_all_stations = np.array(seis_M_0_all_stations)
-        # av_seis_M_0 = np.mean(seis_M_0_all_stations)
-        # n_obs = len(seis_M_0_all_stations)
-        # std_err_seis_M_0 = np.std(seis_M_0_all_stations)/np.sqrt(n_obs)
-        
-        # if verbosity_level>=1:
-        #     print("Average seismic moment for event:", av_seis_M_0, "+/-", std_err_seis_M_0)
+        # 2. Calculate f_c based on curve-fit of spectra with Brune model for fixed Q, found above, for each event:
+        for event_key in list(linear_moment_inv_outputs.keys()):
+            if not event_key=="all_stations":
+                if not event_key=="all_kappas":
+                    if not event_key=="beta_term":
+                        event_inv_params = all_event_inv_params[event_key]
+                        Qs_curr_event = linear_moment_inv_outputs[event_key]["Qs"]
+                        if inv_option == "method-3" or inv_option == "method-4":
+                            A_rad_point = linear_moment_inv_outputs[event_key]["Rs"] / ( 2. * np.cos(surf_inc_angle_rad) )
+                        event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+                        # And append data for event, for outputing:
+                        event_obs_dicts[event_key] = event_obs_dict
 
+    # And return data:
+    if inv_option == "method-2" or inv_option == "method-3" or inv_option == "method-4":
+        return event_obs_dicts, linear_moment_inv_outputs
+    else:
+        return event_obs_dicts, None
 
-
-    # return av_seis_M_0, std_err_seis_M_0, n_obs, event_obs_dict
     
 
         
