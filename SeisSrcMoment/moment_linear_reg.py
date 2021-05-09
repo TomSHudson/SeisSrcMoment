@@ -501,6 +501,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
     # Loop over events:
     initial_event_switch = True
     for i in range(len(NLLoc_event_hyp_filenames)):
+        print("Processing for event:", NLLoc_event_hyp_filenames[i])
         # Import mseed data, nonlinloc data:
         # Import nonlinloc data:
         NLLoc_event_hyp_filename = NLLoc_event_hyp_filenames[i]
