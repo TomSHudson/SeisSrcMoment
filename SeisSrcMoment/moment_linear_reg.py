@@ -501,7 +501,8 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
     # Loop over events:
     initial_event_switch = True
     for i in range(len(NLLoc_event_hyp_filenames)):
-        print("Processing for event:", NLLoc_event_hyp_filenames[i])
+        if verbosity_level > 0:
+            print("Processing for event:", NLLoc_event_hyp_filenames[i])
         # Import mseed data, nonlinloc data:
         # Import nonlinloc data:
         NLLoc_event_hyp_filename = NLLoc_event_hyp_filenames[i]
@@ -724,13 +725,21 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
             # Prep. for inversion:
             event_inv_params_tmp = {}
             event_inv_params_tmp[NLLoc_event_hyp_filename] = event_inv_params.copy()
-            X, y = prep_inv_objects(event_inv_params_tmp, inv_option)
+            try:
+                X, y = prep_inv_objects(event_inv_params_tmp, inv_option)
+            except ValueError:
+                print("Error: prep_inv_objects() failed due to issue (unresolved)... Skipping event.")
+                continue
             # Run linear inversion to find Q:
             # event_obs_dict = run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad, verbosity_level=verbosity_level)
             linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, event_inv_params_tmp, n_cpu=4, verbosity_level=verbosity_level)
             # And find fc from fixed Q:
             Qs_curr_event = linear_moment_inv_outputs[NLLoc_event_hyp_filename]["Qs"]
-            event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+            try:
+                event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+            except RuntimeError:
+                print("Warning: RuntimeError, where fitting Brune model did not converge. Skipping event.")
+                continue
             # And append to overall obs. dict for all events (if solved for events individually):
             event_obs_dicts[NLLoc_event_hyp_filename] = event_obs_dict
         
