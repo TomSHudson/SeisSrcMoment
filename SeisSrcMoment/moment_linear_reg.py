@@ -42,70 +42,6 @@ def nCr(n,r):
     f = math.factorial
     return int(f(n) / f(r) / f(n-r))
 
-# def get_trimmed_disp_tr_and_noise(st_inst_resp_corrected_rotated, station, nonlinloc_hyp_file_data, window_before_after=[0.004, 0.196], phase_to_process="P", remove_noise_spectrum=False, verbosity_level=0):
-#     """Function to take a instrument response corrected and rotated stream object and output a trace for a particular 
-#     station, convereted to displacment. Also trims the trace around the event and gets noise trace."""
-#     # Get trace:
-#     if phase_to_process == 'P':
-#         tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
-#     elif phase_to_process == 'S':
-#         tr = st_inst_resp_corrected_rotated.select(station=station, component="T")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL S!!!
-#     if remove_noise_spectrum:
-#         tr_noise = tr.copy()
-#     # Trim trace approximately (+/- 10 s around event) (for displacement calculation):
-#     try:
-#         phase_arrival_time = nonlinloc_hyp_file_data.phase_data[station][phase_to_process]['arrival_time']
-#     except KeyError:
-#         if verbosity_level > 0:
-#             print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
-#         continue
-#     tr.trim(starttime=phase_arrival_time-(window_before_after[0]+10.0), endtime=phase_arrival_time+(window_before_after[1]+10.0)).detrend('demean')
-#     if len(tr) == 0:
-#         if verbosity_level > 0:
-#             print("Cannot find sufficient data for station:",station,"therefore skipping this station.")
-#         continue
-#     if remove_noise_spectrum:
-#         event_origin_time = nonlinloc_hyp_file_data.origin_time
-#         tr_noise.trim(starttime=event_origin_time-((window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate) + 10.0), endtime=event_origin_time-window_before_after[0]).detrend('demean')
-#         if len(tr_noise) > len(tr):
-#             tr_noise.data = tr_noise.data[0:len(tr)]
-#         if not len(tr_noise.data) == len(tr.data):
-#             print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
-#             continue
-#     if verbosity_level>=3:
-#         tr.plot()
-#     # Convert trace to displacement with padding either side, before final trim:
-#     tr_disp = moment.integrate_trace_through_time(tr, detrend=True)
-#     if remove_noise_spectrum:
-#         tr_noise_disp = moment.integrate_trace_through_time(tr_noise, detrend=True)
-#     # Trim trace to final event duration:
-#     try:
-#         phase_arrival_time = nonlinloc_hyp_file_data.phase_data[station][phase_to_process]['arrival_time']
-#     except KeyError:
-#         if verbosity_level > 0:
-#             print("Cannot find P arrival phase information for station:",station,"therefore skipping this station.")
-#         continue
-#     tr_disp.trim(starttime=phase_arrival_time-window_before_after[0], endtime=phase_arrival_time+window_before_after[1]).detrend('demean')
-#     if len(tr_disp) == 0:
-#         if verbosity_level > 0:
-#             print("Cannot find sufficient data for station:",station,"therefore skipping this station.")
-#         continue
-#     if remove_noise_spectrum:
-#         event_origin_time = nonlinloc_hyp_file_data.origin_time
-#         tr_noise_disp.trim(starttime=event_origin_time-(window_before_after[0] + float(len(tr_disp.data) - 1)/tr_disp.stats.sampling_rate ), endtime=event_origin_time-window_before_after[0]).detrend('demean')
-#         if len(tr_noise_disp) > len(tr_disp):
-#             tr_noise_disp.data = tr_noise_disp.data[0:len(tr_disp)]
-#         if not len(tr_noise_disp.data) == len(tr_disp.data):
-#             print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
-#             continue
-#     if verbosity_level>=3:
-#         tr_disp.plot()
-    
-#     if remove_noise_spectrum:
-#         return tr, tr_disp, tr_noise, tr_noise_disp
-#     else:
-#         return tr, tr_disp
-
 
 def find_nearest(array,value):
     idx = (np.abs(array-value)).argmin()
@@ -244,29 +180,41 @@ def prep_inv_objects(all_event_inv_params, inv_option):
     return X_overall, y_overall
 
 
-def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbosity_level=0):
+def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=-1, verbosity_level=0):
     """Function to run linear inversion for single event.
     Returns event_obs_dict"""    
     # Perform inversion based on inversion option:
     if inv_option == "method-1":
         # Lasso with regularisation path:
-        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-        reg = clf.fit(X, y)
+        model = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = model.fit(X, y)
     elif inv_option == "method-2":
         # Lasso with regularisation path:
-        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-        reg = clf.fit(X, y)
+        model = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic', positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = model.fit(X, y)
     elif inv_option == "method-3":
         # Lasso with regularisation path:
         # (Note: Do not apply positive constraint as R terms can be negative)
-        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic')#, positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-        reg = clf.fit(X, y)
+        model = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic')#, positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = model.fit(X, y)
     elif inv_option == "method-4":
         # Lasso with regularisation path:
         # (Note: Do not apply positive constraint as R terms and beta term can be negative)
-        clf = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic')#, positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
-        reg = clf.fit(X, y)
-    event_inv_outputs = clf.coef_
+        model = linear_model.LassoCV(alphas=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001], max_iter=10000000, n_jobs=n_cpu, selection='cyclic')#, positive=True)#, eps=1e-6, selection='random', tol=1e-6) # (Varies the regularisation value, alpha)
+        reg = model.fit(X, y)
+    # Get inv raw outputs:
+    event_inv_outputs = model.coef_
+    # And calculate uncertainty associated with raw outputs (by calculating the covariance matrix):
+    # (Note: NOT CURRENTLY USED!)
+    # y_hat = model.predict(X)
+    # residuals = y - y_hat
+    # residual_sum_of_squares = residuals.T @ residuals # Cross-product
+    # N = np.count_nonzero(X) # Count number of parameters in sparse X
+    # sigma_squared_hat = residual_sum_of_squares / N
+    # var_beta_hat = np.linalg.inv(X.T @ X) * sigma_squared_hat # Covariance matrix. (var = (X.T x X) sigma^2)
+    # event_inv_outputs_stderr = np.sqrt(var_beta_hat).diagonal() / np.sqrt(N)
+    # del y_hat, residuals, residual_sum_of_squares, sigma_squared_hat, var_beta_hat
+    # gc.collect()
 
     # Get inversion outputs:
     # Setup inversion output info:
@@ -297,6 +245,7 @@ def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbo
             end_idx = (event_count * n_stations * 2) + (2 * n_stations)
             with np.errstate(divide='ignore'):
                 linear_moment_inv_outputs[event_keys[i]]["Qs"] = 1. / event_inv_outputs[start_idx:end_idx][0::2]
+                
             # R-terms:
             linear_moment_inv_outputs[event_keys[i]]["Rs"] = np.exp(event_inv_outputs[start_idx:end_idx][1::2])
         event_count+=1
@@ -314,7 +263,7 @@ def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbo
 
     # And print any notifications:
     if verbosity_level > 0:
-        n_iters = clf.n_iter_
+        n_iters = model.n_iter_
         print("Successfully inverted for event spectral params (in ", n_iters, "iter)")
     
     return linear_moment_inv_outputs
