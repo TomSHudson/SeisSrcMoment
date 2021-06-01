@@ -455,7 +455,12 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         # Import mseed data, nonlinloc data:
         # Import nonlinloc data:
         NLLoc_event_hyp_filename = NLLoc_event_hyp_filenames[i]
-        nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename)
+        try:
+            nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename)
+        except ValueError:
+            if verbosity_level > 0:
+                print("Warning: Cannot get event info from nlloc for event:", NLLoc_event_hyp_filename, "therefore skipping event...")
+            continue
         # Import mseed data:
         if not st:
             st = moment.load_mseed(mseed_filenames[i], filt_freqs)
