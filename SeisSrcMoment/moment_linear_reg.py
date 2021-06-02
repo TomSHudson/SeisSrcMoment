@@ -686,7 +686,11 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                 continue
             # Run linear inversion to find Q:
             # event_obs_dict = run_linear_inv_single_event(X, y, event_inv_params, density, Vp, A_rad_point, surf_inc_angle_rad=surf_inc_angle_rad, verbosity_level=verbosity_level)
-            linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, event_inv_params_tmp, n_cpu=4, verbosity_level=verbosity_level)
+            try:
+                linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, event_inv_params_tmp, n_cpu=4, verbosity_level=verbosity_level)
+            except ValueError:
+                print("Error: run_linear_moment_inv() failed due to X or y containing NaN or inf values (unresolved)... Skipping event.")
+                continue
             # And find fc from fixed Q:
             Qs_curr_event = linear_moment_inv_outputs[NLLoc_event_hyp_filename]["Qs"]
             try:
