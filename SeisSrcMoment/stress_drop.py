@@ -96,7 +96,8 @@ def calc_stress_drop(M_0, f_c, src_model_shear_vel, phase_to_use="P", uncertaint
     # And calculate uncertainty in fault radius, if specified:
     if (len(uncertainty_M_0) > 0) and (len(uncertainty_f_c) > 0):
         fault_radius_plus_uncert = k * src_model_shear_vel / (f_c + uncertainty_f_c)
-        uncertainty_fault_radius = np.abs(fault_radius_plus_uncert - fault_radius)
+        fault_radius_minus_uncert = k * src_model_shear_vel / (f_c - uncertainty_f_c)
+        uncertainty_fault_radius = ( np.abs(fault_radius_plus_uncert - fault_radius) + np.abs(fault_radius_minus_uncert - fault_radius) ) / 2.
 
     # Calculate stress drop from fault radius:
     # (Note that the following equation is for the special case of a circular source 
