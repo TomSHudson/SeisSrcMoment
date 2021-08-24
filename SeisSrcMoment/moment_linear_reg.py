@@ -725,9 +725,15 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
 
     # And return data:
     if inv_option == "method-2" or inv_option == "method-3" or inv_option == "method-4":
-        return event_obs_dicts, linear_moment_inv_outputs
+        if return_spectra_data:
+            return event_obs_dicts, linear_moment_inv_outputs, event_inv_params
+        else:
+            return event_obs_dicts, linear_moment_inv_outputs
     else:
-        return event_obs_dicts, None
+        if return_spectra_data:
+            return event_obs_dicts, None, event_inv_params
+        else:
+            return event_obs_dicts, None
 
     
 
