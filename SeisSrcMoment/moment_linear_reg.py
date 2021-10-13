@@ -43,9 +43,48 @@ def nCr(n,r):
     return int(f(n) / f(r) / f(n-r))
 
 
-def find_nearest(array,value):
+def find_nearest_idx(array,value):
     idx = (np.abs(array-value)).argmin()
     return array[idx], idx
+
+
+def load_st_from_archive(mseed_dir, event_origin_time, win_before_s=10, win_after_s=80, filt_freqs=[]):
+    """Function to load stream from mseed archive.
+    Archive must be of format archive/year/julday/*.m"""
+    mseed_filenames = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m")
+    st = obspy.core.Stream()
+    for fname in glob.glob(mseed_filenames):
+        try:
+            st_tmp = moment.load_mseed(fname, filt_freqs=filt_freqs)
+            st_tmp.trim(starttime=event_origin_time-win_before_s, endtime=event_origin_time+win_after_s)
+        except TypeError:
+            continue
+        for i in range(len(st_tmp)):
+            try:
+                st.append(st_tmp[i])
+                del st_tmp
+                gc.collect()
+            except UnboundLocalError:
+                continue   
+    return st
+
+
+def get_velocity_given_depth(vel_model_df, event_depth_km_bsl, phase_to_process):
+    """Function to find seismic velocity for a particular phase, at particular depth, for a 
+    given velocity model. Returns the velocity in m/s."""
+    if len(vel_model_df) > 0:
+        val, idx = find_nearest_idx(np.array(vel_model_df['Z'])/-1000., event_depth_km_bsl)   
+        if phase_to_process == 'P':
+            Vp_out = vel_model_df['Vp'][idx] * 1000.
+        elif phase_to_process == 'S':
+            Vp_out = vel_model_df['Vs'][idx] * 1000.
+        else:
+            print("Error. phase_to_process = ", phase_to_process, "not supported. Exiting.")
+            sys.exit()
+    else:
+        print("Error. If Vp=from_depth, then vel_model_df must be specified. Exiting.")
+        sys.exit()
+    return Vp_out
 
 
 def set_spectra_from_freq_inv_intervals(freq_inv_intervals, freq_disp, Axx_disp):
@@ -54,7 +93,7 @@ def set_spectra_from_freq_inv_intervals(freq_inv_intervals, freq_disp, Axx_disp)
     freq_disp_out = np.zeros(len(freq_inv_intervals))
     Axx_disp_out = np.zeros(len(freq_inv_intervals))
     for i in range(len(freq_inv_intervals)):
-        f_tmp, idx = find_nearest(freq_disp, freq_inv_intervals[i])
+        f_tmp, idx = find_nearest_idx(freq_disp, freq_inv_intervals[i])
         freq_disp_out[i] = freq_disp[idx]
         Axx_disp_out[i] = Axx_disp[idx]
     return freq_disp_out, Axx_disp_out
@@ -344,26 +383,32 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
     return event_obs_dict
 
 
-def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
+def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed_filenames=None, mseed_dir=None, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
                 window_before_after=[0.004, 0.196], filt_freqs=[], stations_not_to_process=[], MT_data_filenames=[], MT_six_tensors=[], surf_inc_angle_rad=0., st=None, invert_for_geom_spreading=False,
-                num_events_per_inv=1, freq_inv_intervals=None, inv_option="method-1",
+                num_events_per_inv=1, freq_inv_intervals=None, vel_model_df=None, inv_option="method-1",
                 verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, plot_switch=False):
     """Function to calculate seismic moment using a linearised Brune spectral moment method. This method first involves using linearised spectral ratios based on a Brune 
     source model (some basis from Barthwal et al 2019), before calculating the corner frequency by fitting the data using a Brune model with fixed Q, with Q derived in the 
     first step.
     Based on concept by Sacha Lapins (ref. to follow).
 
-    Note that input waveform mseed data should be in velocity format for this version.
+    Notes:
+    - Input waveform mseed data should be in velocity format for this version.
+    - Must specify one of either <mseed_filenames> or <mseed_dir>.
 
     Arguments:
     Required:
-    mseed_filenames - List of of the mseed data to use. Note: This data should be velocity data for this current version. (str)
-    NLLoc_event_hyp_filenames - List of the filenames of the nonlinloc location file containing the phase arrival information for the event. Must be in the same ordeer as 
+    nonlinloc_event_hyp_filenames - List of the filenames of the nonlinloc location file containing the phase arrival information for the event. Must be in the same ordeer as 
                                 the events in <mseed_filenames>. (str)
     density - Density of the medium (float)
-    Vp - The velocity of the medium at the source (could be P or S phase velocity) (float)
+    Vp - The velocity of the medium at the source (could be P or S phase velocity), or = from_depth if wish to use a specified velocity model (specified using the <vel_model_df>
+            variable). (float or str)
     Note: Must also specify one of either inventory_fname or instruments_gain_filename (see optional args for more info)
     Optional:
+    mseed_filenames - List of of the mseed data to use. Note: This data should be velocity data for this current version. If this is specified then it will overrule <mseed_dir>
+                        input parameter. (list of strs)
+    mseed_dir - Path to overall mseed archive to get mseed data for each event from. Archive must be in the format: overall_archive_dir/year/julday/yearjulday_STATION_COMP.m.
+                If <mseed_filenames> is specified then this parameter is redundant. (str)
     phase_to_process - Phase to process (P or S). If P, will use P picks on L component. If S, will use S picks on T component only. If no moment tensor 
                         information is specified, will use average radiation pattern values for the phase specified here (either P or S). Average values are 0.44 
                         for P and 0.6 for S (Stork et al 2014) (str)
@@ -376,11 +421,11 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
     stations_not_to_process - List of station names not to process (list of strs)
     MT_data_filenames - List of ilenames of the moment tensor inversion output, in MTFit format. If None, will use specified MT_six_tensor instead (default = None) (list of 
                         strs)
-    MT_six_tensors - List of 6 moment tensors to use if MT_data_filenames not specified. Of length of NLLoc_event_hyp_filenames. (list of len 6 arrays)
+    MT_six_tensors - List of 6 moment tensors to use if MT_data_filenames not specified. Of length of nonlinloc_event_hyp_filenames. (list of len 6 arrays)
     surf_inc_angle_rad - The angle of incidence (in radians) of the ray with the surface used for the free surface correction. A good approximation (default) 
     is to set to zero. If the instruments are not at the free surface, set this to pi/2. (float)
     st - Obspy stream to process. If this is specified, the parameter mseed_filenames will be ignored and this stream for a single event used instead. Note that still 
-            need to provide NLLoc_event_hyp_filenames, but with only one entry in the list. Default is None. (obspy Stream object)
+            need to provide nonlinloc_event_hyp_filenames, but with only one entry in the list. Default is None. (obspy Stream object)
     invert_for_geom_spreading - If True, this function also inverts for the geometrical spreading parameter, beta. Default is False. Useful if wish to check geometrical 
                                 spreading for an area. For body waves, beta = 1. For standard physics understanding behaviour, reccomend not inverting for geometrical 
                                 spreading (default). (bool)
@@ -390,7 +435,8 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                             array of floats)
     remove_noise_spectrum - If remove_noise_spectrum is set to True, will remove noise spectrum of window directly before trace from signal. Only available if 
                             use_full_spectral_method is set to True. (Default = False) (bool)
-    inv_option - The method/number of paramters to invert for. Parameters are: Q - quality-factor; R - radiation+free-surface term; kappa - near-surface attenuation term; 
+    vel_model_df - Dataframe containing velocity model. Only used if <Vp> = from_depth
+    inv_option - The method/number of parameters to invert for. Parameters are: Q - quality-factor; R - radiation+free-surface term; kappa - near-surface attenuation term; 
                  beta - geometrical spreading term.
                  The following methods are supported:
                     method-1 - Invert for Q. Fix R, kappa, beta (performs on single event)
@@ -414,9 +460,13 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         print("Warning: <invert_for_geom_spreading> not currently allowed to be specified by user. Instead controlled by <inv_option> parameter. Continuing")
 
     # Perform initial tests on input parameters:
-    if len(NLLoc_event_hyp_filenames) != len(mseed_filenames):
-        print("Error: length of NLLoc_event_hyp_filenames != length of mseed_filenames. Exiting.")
+    if not mseed_filenames and not mseed_dir:
+        print("Error: One of <mseed_filenames> or <mseed_dir> must be specified. Exiting.")
         sys.exit()
+    if mseed_filenames:
+        if len(nonlinloc_event_hyp_filenames) != len(mseed_filenames):
+            print("Error: length of nonlinloc_event_hyp_filenames != length of mseed_filenames. Exiting.")
+            sys.exit()
     if (phase_to_process != 'P') and (phase_to_process != 'S'):
         print("Error: phase_to_process = ", phase_to_process, "not recognised. Please specify either P or S. Exiting.")
         sys.exit()
@@ -438,7 +488,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         invert_for_R_term = True
         invert_for_geom_spreading = True
 
-    # Deal with if st specified rather than mseed_filenames, NLLoc_event_hyp_filenames:
+    # Deal with if st specified rather than mseed_filenames, nonlinloc_event_hyp_filenames:
     if st:
         mseed_filenames = ['']
 
@@ -446,24 +496,32 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
     seis_M_0s = []
     event_obs_dicts = {}
     all_event_inv_params = {}
+    if Vp == 'from_depth':
+
+        Vps = []
 
     # Loop over events:
     initial_event_switch = True
-    for i in range(len(NLLoc_event_hyp_filenames)):
+    for i in range(len(nonlinloc_event_hyp_filenames)):
         if verbosity_level > 0:
-            print("Processing for event:", NLLoc_event_hyp_filenames[i])
+            print("Processing for event:", nonlinloc_event_hyp_filenames[i])
         # Import mseed data, nonlinloc data:
         # Import nonlinloc data:
-        NLLoc_event_hyp_filename = NLLoc_event_hyp_filenames[i]
+        nonlinloc_event_hyp_filename = nonlinloc_event_hyp_filenames[i]
         try:
-            nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename)
+            nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(nonlinloc_event_hyp_filename)
         except ValueError:
             if verbosity_level > 0:
-                print("Warning: Cannot get event info from nlloc for event:", NLLoc_event_hyp_filename, "therefore skipping event...")
+                print("Warning: Cannot get event info from nlloc for event:", nonlinloc_event_hyp_filename, "therefore skipping event...")
             continue
         # Import mseed data:
         if not st:
-            st = moment.load_mseed(mseed_filenames[i], filt_freqs)
+            if mseed_dir:
+                st = load_st_from_archive(mseed_dir, nonlinloc_hyp_file_data.origin_time, win_before_s=10, win_after_s=80)
+            else:
+                if mseed_filenames:
+                    st = moment.load_mseed(mseed_filenames[i], filt_freqs)
+
         # Check if any components are labelled ??1 or ??2, and relabel N and E just for magnitude processing (for rotation below):
         st = moment.relabel_one_and_two_channels_with_N_E(st)
         # Try and trim the stream to a smaller size (if using database mseed):
@@ -473,13 +531,24 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         st = moment.force_stream_sample_alignment(st)
         st = moment.check_st_n_samp(st)
 
+        # Get seismic velocity at source depth, if <Vp> = 'from_depth':
+        if Vp == 'from_depth':
+            event_depth_km_bsl = nonlinloc_hyp_file_data.max_prob_hypocenter['depth']
+            Vp_curr = get_velocity_given_depth(vel_model_df, event_depth_km_bsl, phase_to_process)
+            Vps.append(Vp_curr)
+
         # ---------------- Process data for current event: ----------------
 
         # 1. Correct for instrument response:
         st_inst_resp_corrected = moment.remove_instrument_response(st, inventory_fname, instruments_gain_filename) # Note: Only corrects for full instrument response if inventory_fname is specified
 
         # 2. Rotate trace into LQT:
-        st_inst_resp_corrected_rotated = moment.rotate_ZNE_to_LQT_axes(st_inst_resp_corrected, NLLoc_event_hyp_filename, stations_not_to_process)
+        st_inst_resp_corrected_rotated = moment.rotate_ZNE_to_LQT_axes(st_inst_resp_corrected, nonlinloc_event_hyp_filename, stations_not_to_process)
+        # #==========
+        # print(st_inst_resp_corrected_rotated)
+        # sys.exit()
+        # #==========
+
 
         # 3. Get various data for each source-receiver pair (for current event):
         station_count = 0
@@ -582,7 +651,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                 print("Calculated diplacement spectra")
 
             # 3.c. Get source-receiver distance, r:
-            r_km = moment.get_event_hypocentre_station_distance(NLLoc_event_hyp_filename, station)
+            r_km = moment.get_event_hypocentre_station_distance(nonlinloc_event_hyp_filename, station)
             r_m = r_km*1000.
             if verbosity_level>=2:
                 print("r (m):", r_m)
@@ -668,9 +737,9 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         # Check if 2 or more stations (as need >=2 stations for spectral ratios analysis),
         # and append if satisfied:
         if len(event_inv_params.keys()) > 1:
-            all_event_inv_params[NLLoc_event_hyp_filename] = event_inv_params.copy()
+            all_event_inv_params[nonlinloc_event_hyp_filename] = event_inv_params.copy()
         else:
-            print("Insufficient observations for spectral ratios, therefore skipping event", NLLoc_event_hyp_filename)
+            print("Insufficient observations for spectral ratios, therefore skipping event", nonlinloc_event_hyp_filename)
             del event_inv_params
             continue
 
@@ -678,7 +747,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         if inv_option == "method-1":
             # Prep. for inversion:
             event_inv_params_tmp = {}
-            event_inv_params_tmp[NLLoc_event_hyp_filename] = event_inv_params.copy()
+            event_inv_params_tmp[nonlinloc_event_hyp_filename] = event_inv_params.copy()
             try:
                 X, y = prep_inv_objects(event_inv_params_tmp, inv_option)
             except ValueError:
@@ -692,14 +761,14 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                 print("Error: run_linear_moment_inv() failed due to X or y containing NaN or inf values (unresolved)... Skipping event.")
                 continue
             # And find fc from fixed Q:
-            Qs_curr_event = linear_moment_inv_outputs[NLLoc_event_hyp_filename]["Qs"]
+            Qs_curr_event = linear_moment_inv_outputs[nonlinloc_event_hyp_filename]["Qs"]
             try:
-                event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+                event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp_curr, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
             except RuntimeError:
                 print("Warning: RuntimeError, where fitting Brune model did not converge. Skipping event.")
                 continue
             # And append to overall obs. dict for all events (if solved for events individually):
-            event_obs_dicts[NLLoc_event_hyp_filename] = event_obs_dict
+            event_obs_dicts[nonlinloc_event_hyp_filename] = event_obs_dict
         
         # ---------------- End: Process data for current event ----------------
     
@@ -711,6 +780,7 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
         linear_moment_inv_outputs = run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=4, verbosity_level=verbosity_level)
 
         # 2. Calculate f_c based on curve-fit of spectra with Brune model for fixed Q, found above, for each event:
+        count_tmp = 0
         for event_key in list(linear_moment_inv_outputs.keys()):
             if not event_key=="all_stations":
                 if not event_key=="all_kappas":
@@ -719,9 +789,10 @@ def calc_moment_via_linear_reg(mseed_filenames, NLLoc_event_hyp_filenames, densi
                         Qs_curr_event = linear_moment_inv_outputs[event_key]["Qs"]
                         if inv_option == "method-3" or inv_option == "method-4":
                             A_rad_point = linear_moment_inv_outputs[event_key]["Rs"] / ( 2. * np.cos(surf_inc_angle_rad) )
-                        event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+                        event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vps[count_tmp], A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
                         # And append data for event, for outputing:
                         event_obs_dicts[event_key] = event_obs_dict
+                        count_tmp += 1
 
     # And return data:
     if inv_option == "method-2" or inv_option == "method-3" or inv_option == "method-4":

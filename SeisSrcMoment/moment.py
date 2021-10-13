@@ -274,8 +274,8 @@ def rotate_ZNE_to_LQT_axes(st, NLLoc_event_hyp_filename, stations_not_to_process
             # Find station in stream (if exists, this will be longer than 0):
             st_spec_station = st_to_rotate.select(station=statName)
     
-            # Check if station exists in stream (i.e. if station stream is equal to 3) and if it does then continue processing:
-            if len(st_spec_station) == 3:
+            # Check if station exists with all components in stream (i.e. if station stream is greater than or equal to 3) and if it does then continue processing:
+            if len(st_spec_station) >= 3:
                 # Find the back azimuth and inclinaation angle at the station from nonlinloc data:
                 phases = list(nonlinloc_hyp_file_data.phase_data[statName].keys())
                 station_current_azimuth_event_to_sta = nonlinloc_hyp_file_data.phase_data[statName][phases[0]]['SAzim']
