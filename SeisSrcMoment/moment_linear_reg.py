@@ -30,6 +30,7 @@ from obspy import UTCDateTime as UTCDateTime
 import subprocess
 import gc
 import math
+import pickle
 from scipy.optimize import curve_fit, lsq_linear 
 from sklearn import linear_model # For solving linear path regression inversion 
 from mtspec import mtspec # For multi-taper spectral analysis
@@ -386,7 +387,7 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
 def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed_filenames=None, mseed_dir=None, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
                 window_before_after=[0.004, 0.196], filt_freqs=[], stations_not_to_process=[], MT_data_filenames=[], MT_six_tensors=[], surf_inc_angle_rad=0., st=None, invert_for_geom_spreading=False,
                 num_events_per_inv=1, freq_inv_intervals=None, vel_model_df=None, inv_option="method-1",
-                verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, plot_switch=False):
+                verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, outdir=None, plot_switch=False):
     """Function to calculate seismic moment using a linearised Brune spectral moment method. This method first involves using linearised spectral ratios based on a Brune 
     source model (some basis from Barthwal et al 2019), before calculating the corner frequency by fitting the data using a Brune model with fixed Q, with Q derived in the 
     first step.
@@ -447,6 +448,7 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
                  Default is method-1. (specific str)
     verbosity_level - Verbosity level of output. 1 for moment only, 2 for major parameters, 3 for plotting of traces. (defualt = 0) (int)
     return_spectra_data - If True, returns displacement spectrum data to output dict. Default is False. (bool)
+    outdir - Path and output directory for saving data. Default is None, and if None, does not save data out. (default = None) (str)
     plot_switch - Switches on plotting of analysis if True. Default is False (bool)
     Returns:
     seis_M_0s - The average seismic moment each event, in Nm (float)
@@ -794,17 +796,33 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
                         event_obs_dicts[event_key] = event_obs_dict
                         count_tmp += 1
 
-    # And return data:
+    # And save and return data:
+    if outdir:
+        os.makedirs(outdir, exist_ok=True)
     if inv_option == "method-2" or inv_option == "method-3" or inv_option == "method-4":
         if return_spectra_data:
+            if outdir:
+                pickle.dump(event_obs_dicts, open(os.path.join(outdir, "event_obs_dicts.pkl"), 'wb'))    
+                pickle.dump(linear_moment_inv_outputs, open(os.path.join(outdir, "linear_moment_inv_outputs.pkl"), 'wb'))   
+                pickle.dump(event_inv_params, open(os.path.join(outdir, "event_inv_params.pkl"), 'wb'))   
             return event_obs_dicts, linear_moment_inv_outputs, event_inv_params
         else:
+            if outdir:
+                pickle.dump(event_obs_dicts, open(os.path.join(outdir, "event_obs_dicts.pkl"), 'wb'))    
+                pickle.dump(linear_moment_inv_outputs, open(os.path.join(outdir, "linear_moment_inv_outputs.pkl"), 'wb'))   
             return event_obs_dicts, linear_moment_inv_outputs
     else:
         if return_spectra_data:
+            if outdir:
+                pickle.dump(event_obs_dicts, open(os.path.join(outdir, "event_obs_dicts.pkl"), 'wb'))    
+                pickle.dump(event_inv_params, open(os.path.join(outdir, "event_inv_params.pkl"), 'wb'))   
             return event_obs_dicts, None, event_inv_params
         else:
+            if outdir:
+                pickle.dump(event_obs_dicts, open(os.path.join(outdir, "event_obs_dicts.pkl"), 'wb'))    
             return event_obs_dicts, None
+
+    
 
     
 
