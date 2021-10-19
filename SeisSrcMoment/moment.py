@@ -668,7 +668,6 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     Returns:
     seis_M_0 - The seismic moment in Nm (float)
     """
-
     # Import mseed data, nonlinloc data and MT data:
     # Import nonlinloc data:
     nonlinloc_hyp_file_data = read_nonlinloc.read_hyp_file(NLLoc_event_hyp_filename)
@@ -745,12 +744,15 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             continue
         if remove_noise_spectrum:
             event_origin_time = nonlinloc_hyp_file_data.origin_time
-            tr_noise.trim(starttime=event_origin_time-((window_before_after[0] + float(len(tr.data) - 1)/tr.stats.sampling_rate) + 10.0), endtime=event_origin_time-window_before_after[0]).detrend('demean')
-            if len(tr_noise) > len(tr):
-                tr_noise.data = tr_noise.data[0:len(tr)]
-            if not len(tr_noise.data) == len(tr.data):
-                print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
-                continue
+            tr_noise.trim(starttime=event_origin_time-(window_before_after[0] + (float(len(tr.data) - 1)/tr.stats.sampling_rate) + 10.0), endtime=event_origin_time-window_before_after[0]).detrend('demean')
+            # print("HERE!!!!")
+            # print(len(tr_noise), len(tr))
+            # if len(tr_noise) > len(tr):
+            #     tr_noise.data = tr_noise.data[0:len(tr.data)]
+            # if not len(tr_noise.data) == len(tr.data):
+            #     if verbosity_level > 0:
+            #         print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
+            #     continue
         if verbosity_level>=3:
             tr.plot()
         # Convert trace to displacement with padding either side, before final trim:
@@ -775,7 +777,8 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             if len(tr_noise_disp) > len(tr_disp):
                 tr_noise_disp.data = tr_noise_disp.data[0:len(tr_disp)]
             if not len(tr_noise_disp.data) == len(tr_disp.data):
-                print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
+                if verbosity_level > 0:
+                    print("Warning: Noise trace must be same length as data trace. Therefore skipping data for station: ",station,".")
                 continue
         if verbosity_level>=3:
             tr_disp.plot()
@@ -799,9 +802,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
         if use_full_spectral_method:
             if remove_noise_spectrum:
                 if return_spectra_data:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev, spect_data_dict = get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=tr_noise_disp, plot_switch=plot_switch, return_spectra_data=return_spectra_data, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
                 else:
-                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, tr_noise=tr_noise_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
+                    Sigma_0, f_c, t_star, Sigma_0_stdev, f_c_stdev, t_star_stdev = get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=tr_noise_disp, plot_switch=plot_switch, manual_fixed_fc_Hz=manual_fixed_fc_Hz, apply_Brune_fit_bounds=apply_Brune_fit_bounds, manual_fixed_t_star=manual_fixed_t_star)
                 del tr_noise_disp
                 gc.collect()
             else:
