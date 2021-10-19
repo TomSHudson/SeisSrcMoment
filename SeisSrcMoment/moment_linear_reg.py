@@ -538,6 +538,8 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
             event_depth_km_bsl = nonlinloc_hyp_file_data.max_prob_hypocenter['depth']
             Vp_curr = get_velocity_given_depth(vel_model_df, event_depth_km_bsl, phase_to_process)
             Vps.append(Vp_curr)
+        else:
+            Vp_curr = Vp 
 
         # ---------------- Process data for current event: ----------------
 
