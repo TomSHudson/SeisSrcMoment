@@ -523,6 +523,8 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
         # Specify spectrum data dict to store data in:
         spect_data_dict = {}
         spect_data_dict['FFT_disp_spectrum'] = {}
+        freq_displacement2, Pxx = periodogram(tr_disp.data, fs=tr_disp.stats.sampling_rate) 
+        tr_disp_data_freq_domain = np.sqrt(Pxx)
         spect_data_dict['FFT_disp_spectrum']['f'] = freq_displacement2[1:]
         spect_data_dict['FFT_disp_spectrum']['A'] = tr_disp_data_freq_domain[1:]
         spect_data_dict['mtspec_disp_spectrum'] = {}
