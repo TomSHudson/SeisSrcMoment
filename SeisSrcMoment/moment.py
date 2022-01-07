@@ -178,8 +178,12 @@ def Brune_model(f, Sigma_0, f_c, t_star):
 
 def remove_instrument_response(st, inventory_fname=None, instruments_gain_filename=None, pre_filt=None):
     """Function to remove instrument response from mseed.
-    Note: Only corrects for full instrument response if inventory_fname is specified."""
+    Note: Only corrects for full instrument response if inventory_fname is specified.
+    Note: Will also correct for BPA channels, as used in shear-wave splitting analysis, by assuming that 
+    B, P and A channels are equivilent to Z, N and E channels, respectively. Obviously this is an 
+    approximation."""
     st_out = st.copy()
+    channel_prefixes = st[0].stats.channel[0:2]
 
     # Check that not given multiple data sources (which would be ambiguous):
     if None not in (inventory_fname, instruments_gain_filename):
@@ -192,7 +196,16 @@ def remove_instrument_response(st, inventory_fname=None, instruments_gain_filena
         tr_info_to_remove = [] # List of trs to remove (that cannot remove response for)
         for i in range(len(st_out)):
             try:
-                st_out[i].simulate(paz_remove=inst_resp_dict[st[i].stats.network][st[i].stats.station][st[i].stats.channel], pre_filt=pre_filt)
+                channel_curr = st[i].stats.channel
+                # Perform channel checking to cope with BPA components:
+                if channel_curr[-1] == "B":
+                    channel_curr = channel_curr[0:2]+"Z"
+                if channel_curr[-1] == "P":
+                    channel_curr = channel_curr[0:2]+"N"
+                if channel_curr[-1] == "A":
+                    channel_curr = channel_curr[0:2]+"E"
+                # And remove instrument response:
+                st_out[i].simulate(paz_remove=inst_resp_dict[st[i].stats.network][st[i].stats.station][channel_curr], pre_filt=pre_filt)
             except KeyError:
                 print("Station ("+st[i].stats.station+") or channel ("+st[i].stats.channel+") not in instrument inventory, therefore not correcting for this component and removing it.")
                 tr_info_to_remove.append([ st[i].stats.station, st[i].stats.channel ])
@@ -618,10 +631,10 @@ def find_Q_peak_freq_method(tr_vel, travel_time):
     return Q, t_star
 
 
-def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
-                window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], surf_inc_angle_rad=0., st=None, 
-                use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, manual_fixed_fc_Hz=None, manual_fixed_Q=None, 
-                apply_Brune_fit_bounds=False, calc_Q_independent_of_Brune=False, plot_switch=False):
+def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process='P', channel_to_process=None, inventory_fname=None, 
+                instruments_gain_filename=None, window_before_after=[0.004, 0.196], Q=150, filt_freqs=[], stations_not_to_process=[], MT_data_filename=None, MT_six_tensor=[], 
+                surf_inc_angle_rad=0., st=None, use_full_spectral_method=True, verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, manual_fixed_fc_Hz=None, 
+                manual_fixed_Q=None, apply_Brune_fit_bounds=False, calc_Q_independent_of_Brune=False, plot_switch=False):
     """Function to calculate seismic moment, based on input params, using the P wave arrivals, as detailed in Shearer et al 2009. Note that input waveform mseed 
     data should be in velocity format for this version.
     Arguments:
@@ -636,6 +649,9 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
     phase_to_process - Phase to process (P or S). If P, will use P picks on L component. If S, will use S picks on T component only. If no moment tensor 
                         information is specified, will use average radiation pattern values for the phase specified here (either P or S). Average values are 0.44 
                         for P and 0.6 for S (Stork et al 2014) (str)
+    channel_to_process - Stream channel to process. If specified, then channel selection will force this channel rather than the channel specified by <phase_to_process>.
+                        Note that this is an advanced feature and should only be used for very specific tasks, as it could neccessarily conflict with assumptions made 
+                        in the moment calculation. Default is None, where it won't be used. (str)
     inventory_fname - Filename of a .dataless file containing the network instrument info (dataless information), for correcting for instrument response (str)
     instruments_gain_filename - Filenmae of a text file containing the instrument gains, with the columns: [Station instrument_gain(Z N E) digitaliser_gain(Z N E)].
                                 Not required if specified inventory_fname. Note: Will not correct for the gains if instruments_gain_filename is specified. (str)
@@ -730,6 +746,8 @@ def calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_
             tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
         elif phase_to_process == 'S':
             tr = st_inst_resp_corrected_rotated.select(station=station, component="T")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL S!!!
+        if channel_to_process:
+            tr = st_inst_resp_corrected.select(station=station, channel=channel_to_process)[0]
         if remove_noise_spectrum:
             tr_noise = tr.copy()
         # Trim trace approximately (+/- 10 s around event) (for displacement calculation):

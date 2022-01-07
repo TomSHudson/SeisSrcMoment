@@ -384,10 +384,10 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
     return event_obs_dict
 
 
-def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed_filenames=None, mseed_dir=None, phase_to_process='P', inventory_fname=None, instruments_gain_filename=None, 
-                window_before_after=[0.004, 0.196], filt_freqs=[], stations_not_to_process=[], MT_data_filenames=[], MT_six_tensors=[], surf_inc_angle_rad=0., st=None, invert_for_geom_spreading=False,
-                num_events_per_inv=1, freq_inv_intervals=None, vel_model_df=None, inv_option="method-1",
-                verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, outdir=None, plot_switch=False):
+def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed_filenames=None, mseed_dir=None, phase_to_process='P', channel_to_process=None, inventory_fname=None, 
+                                instruments_gain_filename=None, window_before_after=[0.004, 0.196], filt_freqs=[], stations_not_to_process=[], MT_data_filenames=[], MT_six_tensors=[], 
+                                surf_inc_angle_rad=0., st=None, invert_for_geom_spreading=False, num_events_per_inv=1, freq_inv_intervals=None, vel_model_df=None, inv_option="method-1", 
+                                verbosity_level=0, remove_noise_spectrum=False, return_spectra_data=False, outdir=None, plot_switch=False):
     """Function to calculate seismic moment using a linearised Brune spectral moment method. This method first involves using linearised spectral ratios based on a Brune 
     source model (some basis from Barthwal et al 2019), before calculating the corner frequency by fitting the data using a Brune model with fixed Q, with Q derived in the 
     first step.
@@ -413,6 +413,9 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
     phase_to_process - Phase to process (P or S). If P, will use P picks on L component. If S, will use S picks on T component only. If no moment tensor 
                         information is specified, will use average radiation pattern values for the phase specified here (either P or S). Average values are 0.44 
                         for P and 0.6 for S (Stork et al 2014) (str)
+    channel_to_process - Stream channel to process. If specified, then channel selection will force this channel rather than the channel specified by <phase_to_process>.
+                        Note that this is an advanced feature and should only be used for very specific tasks, as it could neccessarily conflict with assumptions made 
+                        in the moment calculation. Default is None, where it won't be used. (str)
     inventory_fname - Filename of a .dataless file containing the network instrument info (dataless information), for correcting for instrument response (str)
     instruments_gain_filename - Filenmae of a text file containing the instrument gains, with the columns: [Station instrument_gain(Z N E) digitaliser_gain(Z N E)].
                                 Not required if specified inventory_fname. Note: Will not correct for the gains if instruments_gain_filename is specified. (str)
@@ -580,6 +583,8 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
                 tr = st_inst_resp_corrected_rotated.select(station=station, component="L")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL P!!!
             elif phase_to_process == 'S':
                 tr = st_inst_resp_corrected_rotated.select(station=station, component="T")[0] # NOTE: MUST ROTATE TRACE TO GET TOTAL S!!!
+            if channel_to_process:
+                tr = st_inst_resp_corrected.select(station=station, channel=channel_to_process)[0]
             if remove_noise_spectrum:
                 tr_noise = tr.copy()
             # Trim trace approximately (+/- 10 s around event) (for displacement calculation):
