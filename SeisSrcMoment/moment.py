@@ -179,11 +179,10 @@ def Brune_model(f, Sigma_0, f_c, t_star):
 def remove_instrument_response(st, inventory_fname=None, instruments_gain_filename=None, pre_filt=None):
     """Function to remove instrument response from mseed.
     Note: Only corrects for full instrument response if inventory_fname is specified.
-    Note: Will also correct for BPA channels, as used in shear-wave splitting analysis, by assuming that 
-    B, P and A channels are equivilent to Z, N and E channels, respectively. Obviously this is an 
+    Note: Will also correct for BPA and FS channels, as used in shear-wave splitting analysis, by assuming that 
+    B, P (and F,S) and A channels are equivilent to Z, N and E channels, respectively. Obviously this is an 
     approximation."""
     st_out = st.copy()
-    channel_prefixes = st[0].stats.channel[0:2]
 
     # Check that not given multiple data sources (which would be ambiguous):
     if None not in (inventory_fname, instruments_gain_filename):
@@ -197,13 +196,17 @@ def remove_instrument_response(st, inventory_fname=None, instruments_gain_filena
         for i in range(len(st_out)):
             try:
                 channel_curr = st[i].stats.channel
-                # Perform channel checking to cope with BPA components:
+                # Perform channel checking to cope with BPA,FS components:
                 if channel_curr[-1] == "B":
                     channel_curr = channel_curr[0:2]+"Z"
                 if channel_curr[-1] == "P":
                     channel_curr = channel_curr[0:2]+"N"
                 if channel_curr[-1] == "A":
                     channel_curr = channel_curr[0:2]+"E"
+                if channel_curr[-1] == "F":
+                    channel_curr = channel_curr[0:2]+"N"
+                if channel_curr[-1] == "S":
+                    channel_curr = channel_curr[0:2]+"N"
                 # And remove instrument response:
                 st_out[i].simulate(paz_remove=inst_resp_dict[st[i].stats.network][st[i].stats.station][channel_curr], pre_filt=pre_filt)
             except KeyError:
