@@ -421,7 +421,7 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
                                 Not required if specified inventory_fname. Note: Will not correct for the gains if instruments_gain_filename is specified. (str)
     window_before_after - The time in seconds, for the window start before and after the phase arrival, in the format [t_before, t_after] (list of floats of len 2)
     filt_freqs - A list of two values, specifying the high pass and low pass filter values to apply to the imported data [high_pass, low_pass]. Default is to not apply
-    a filter (filt_freqs = []) (list of two floats)
+                    a filter (filt_freqs = []) (list of two floats)
     stations_not_to_process - List of station names not to process (list of strs)
     MT_data_filenames - List of ilenames of the moment tensor inversion output, in MTFit format. If None, will use specified MT_six_tensor instead (default = None) (list of 
                         strs)

@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import obspy
 import sys, os
 import glob
+import pickle 
 from obspy import UTCDateTime as UTCDateTime
 import gc
 from scipy.optimize import curve_fit
@@ -38,11 +39,34 @@ def linear_reg_func(x, m, c):
     return (m*x) + c 
 
 
-def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None, st=None, filt_freqs=None, t1_lapse=13.5, coda_win_s=15., T_moving_av_win=3., freq_approx=5., alpha_gs=2., verbosity_level=0):
-    """Function to calculate coda attenuation quality factor, Qc.
-    Note: Currently only applied for S-wave coda.
+def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None, st=None, filt_freqs=None, t1_lapse=13.5, coda_win_s=15., T_moving_av_win=3., freq_approx=5., 
+            alpha_gs=2., outdir=None, verbosity_level=0):
+    """Function to calculate coda attenuation quality factor, Qc. Uses an adapted power ratio method from Wang and Shearer (2019).
+
+    Note: 
+    - Currently only applied for S-wave coda.
     
+    Arguments:
+    Required:
+    nonlinloc_event_hyp_filenames - List of the filenames of the nonlinloc location file containing the phase arrival information for the event. Must be in the same ordeer as 
+                                the events in <mseed_filenames>. (str)
+    Optional:
+    mseed_filenames - List of of the mseed data to use. Note: This data should be velocity data for this current version. If this is specified then it will overrule <mseed_dir>
+                        input parameter. (list of strs)
+    mseed_dir - Path to overall mseed archive to get mseed data for each event from. Archive must be in the format: overall_archive_dir/year/julday/yearjulday_STATION_COMP.m.
+                If <mseed_filenames> is specified then this parameter is redundant. (str)
+    st - Obspy stream to process. If this is specified, the parameter mseed_filenames will be ignored and this stream for a single event used instead. Note that still 
+            need to provide nonlinloc_event_hyp_filenames, but with only one entry in the list. Default is None. (obspy Stream object)
+    filt_freqs - A list of two values, specifying the high pass and low pass filter values to apply to the imported data [high_pass, low_pass]. Default is to not apply
+                a filter (filt_freqs = []) (list of two floats)
+    t1_lapse - The earthquake lapse time for the start of the coda window to use, in seconds. The lapse time is the time after the origin time of the earthquake. 
+                Default is 13.5 s. (float)
+    coda_win_s - The length of the coda window to use for the analysis, in seconds, after t1_lapse. The default is 15 s. (float)
+    T_moving_av_win - The time-period of the moving average window to apply to the coda power decay, in seconds. Default is 3 seconds. (float)
+    freq_approx - The approximate centre frequency to use for calculating Qc, in Hz. Defualt is 5 Hz. (float)
     alpha_gs = 1.5 # Geometrical spreading term. 1.5 for 3D diffusion theory, 2 for single-scattering body wave coda (see Wang2019, p580)
+    outdir - Path and output directory for saving data. Default is None, and if None, does not save data out. (default = None) (str)
+    verbosity_level - Verbosity level of output. 0 = no output, 1 = indication of events being processed.
     """
     # Perform initial checks:
 
@@ -88,6 +112,7 @@ def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None,
         # 2.a. Trim stream about coda lapse times:
         st_coda = st.copy()
         del st
+        st = None 
         gc.collect()
         st_coda.trim(starttime=nonlinloc_hyp_file_data.origin_time+t1_lapse, endtime=nonlinloc_hyp_file_data.origin_time+t1_lapse+coda_win_s)
         # 2.b. Loop over stations, calculating coda power decrease, and hence Qc through coda:
@@ -141,6 +166,12 @@ def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None,
         
         # And append to overall obs. dict for all events (if solved for events individually):
         event_obs_dicts[nonlinloc_event_hyp_filename] = event_obs_dict
+
+    # And save output out, if specified:
+    if outdir:
+        os.makedirs(outdir, exist_ok=True)
+        print("Saving output to:", os.path.join(outdir, "event_obs_dicts.pkl"))
+        pickle.dump(event_obs_dicts, open(os.path.join(outdir, "event_obs_dicts.pkl"), 'wb'))    
 
     return event_obs_dicts   
 
