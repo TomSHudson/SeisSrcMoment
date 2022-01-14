@@ -77,7 +77,7 @@ def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None,
     # Loop over events:
     for i in range(len(nonlinloc_event_hyp_filenames)):
         if verbosity_level > 0:
-            print("Processing for event:", nonlinloc_event_hyp_filenames[i])
+            print("Processing for event:", i, "/", len(nonlinloc_event_hyp_filenames))
 
         event_obs_dict = {}
 
@@ -122,14 +122,21 @@ def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None,
                 stations_to_process.append(tr.stats.station)
         for station in stations_to_process:
             # Get power data:
+            # Get data:
             try:
                 tr_N = st_coda.select(station=station, channel="??N")[0]
                 tr_E = st_coda.select(station=station, channel="??E")[0]
             except:
                 continue
+            # Calculate combined power:
             power_N = moving_average(tr_N.data**2, int(T_moving_av_win*tr_N.stats.sampling_rate))
             power_E = moving_average(tr_E.data**2, int(T_moving_av_win*tr_E.stats.sampling_rate))
             power_NE = power_N + power_E 
+            # Check for nans and zeros:
+            array_sum = np.sum(power_NE)
+            if np.isnan(array_sum) or array_sum==0.:
+                print("Skipping station "+station+" as NaNs or zeros found in power calc.")
+                continue
 
             # Calculate power ratio (using a linear regression through time):
             t = (t1_lapse - (T_moving_av_win/2)) + (np.arange(len(power_N)) / tr_N.stats.sampling_rate) #t1_lapse, t1_lapse+coda_win_s, 
