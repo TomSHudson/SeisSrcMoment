@@ -131,7 +131,12 @@ def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None,
             # Calculate combined power:
             power_N = moving_average(tr_N.data**2, int(T_moving_av_win*tr_N.stats.sampling_rate))
             power_E = moving_average(tr_E.data**2, int(T_moving_av_win*tr_E.stats.sampling_rate))
-            power_NE = power_N + power_E 
+            if len(power_N) < len(power_E):
+                power_NE = power_N + power_E[0:len(power_N)]
+            elif len(power_N) > len(power_E):
+                power_NE = power_N[0:len(power_E)] + power_E 
+            else:
+                power_NE = power_N + power_E 
             # Check for nans and zeros:
             array_sum = np.sum(power_NE)
             if np.isnan(array_sum) or array_sum==0.:
@@ -139,7 +144,7 @@ def calc_Qc(nonlinloc_event_hyp_filenames, mseed_filenames=None, mseed_dir=None,
                 continue
 
             # Calculate power ratio (using a linear regression through time):
-            t = (t1_lapse - (T_moving_av_win/2)) + (np.arange(len(power_N)) / tr_N.stats.sampling_rate) #t1_lapse, t1_lapse+coda_win_s, 
+            t = (t1_lapse - (T_moving_av_win/2)) + (np.arange(len(power_NE)) / tr_N.stats.sampling_rate) #t1_lapse, t1_lapse+coda_win_s, 
             popt, pcov = curve_fit(linear_reg_func, t, np.log10(power_NE))
             t_solns = np.array([t1_lapse + (T_moving_av_win/2), t1_lapse + coda_win_s - (T_moving_av_win/2)])
             log_powers_out_lin_reg = linear_reg_func(t_solns, *popt)
