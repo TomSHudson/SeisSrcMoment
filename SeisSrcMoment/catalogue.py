@@ -44,7 +44,7 @@ def find_nearest_idx(array, value):
     return idx, array[idx]
 
 
-def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_list, mseed_dir, out_fname, window_before_after, filt_freqs, density, Vp, phase_to_process='P', MT_six_tensor=[], stations_not_to_process=[], inventory_fname=None, instruments_gain_filename=None, remove_noise_spectrum=False, vel_model_df=[], verbosity_level=0, plot_switch=False):
+def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_list, mseed_dir, out_fname, window_before_after, filt_freqs, density, Vp, phase_to_process='P', MT_six_tensor=[], stations_not_to_process=[], inventory_fname=None, instruments_gain_filename=None, remove_noise_spectrum=False, vel_model_df=[], efficient_hr_mseed_read=False, verbosity_level=0, plot_switch=False):
     """Function to find the event moment magnitudes for a specified list of NonLinLoc relocated 
     earthquakes. Outputs a python dictionary to file containing all the event magnitude catalogue 
     information for all the earthquakes. This is saved to <out_fname>.
@@ -108,6 +108,9 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
     vel_model_df - A pandas dataframe object containing the velocity model (with columns: Z, 
                     Vp, Vs). This is used if <Vp> is specified to be selected "from_depth".
                     Default is for it not to be specified, and hence not used. (pandas df)
+    efficient_hr_mseed_read - If True, efficiently reads mseed data. Assumes mseed in 
+                    archive in hour splits, with the format: 
+                    <YEAR><JULDAY>_<HOUR>0000_<STATION>_<CHANNEL>.m*
     verbosity_level - Verbosity level (1 for moment only) (2 for major parameters) (3 for 
                     plotting of traces). Defualt = 0. (int)
     plot_switch - If True, plots out displacement spectra and Brune model fits. (bool)
@@ -130,7 +133,11 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
         stations_to_calculate_moment_for = list(nonlinloc_event_hyp_data.phase_data.keys())
         
         # 2. Get stream to pass to calc_moment:
-        mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m*")
+        if efficient_hr_mseed_read:
+            mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), 
+                                            "*_"+str(event_origin_time.hour).zfill(2)+"0000_*.m*")
+        else:
+            mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m*")
         st = obspy.core.Stream()
         for fname in glob.glob(mseed_filename):
             try:
