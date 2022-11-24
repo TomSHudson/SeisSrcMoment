@@ -130,7 +130,7 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
         stations_to_calculate_moment_for = list(nonlinloc_event_hyp_data.phase_data.keys())
         
         # 2. Get stream to pass to calc_moment:
-        mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m")
+        mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m*")
         st = obspy.core.Stream()
         for fname in glob.glob(mseed_filename):
             try:
