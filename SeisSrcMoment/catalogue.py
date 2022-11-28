@@ -198,7 +198,7 @@ def get_cummulative_magnitude_dist(Mw_hist):
     return cum_Mw_hist
 
 
-def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=10, Mw_err=[], plot_switch=True, plot_mag_hist_data=True, fig_out_fname='', min_max_mag_plot_lims=[]):
+def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=10, Mw_err=[], plot_switch=True, plot_mag_hist_data=True, fig=None, fig_data_colours=['k', '#187A5B', '#1073A9', '#801C92'], fig_out_fname='', min_max_mag_plot_lims=[]):
     """Function to find the b-value of a magnitude distribution. (Adapted from BUMPs matlab code).
     Arguments:
     Required:
@@ -212,6 +212,10 @@ def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=1
     Mw_err - An array containing the estimated uncertainty in Mw_arr (array of floats)
     plot_switch - If true, plot data (Default is True) (bool)
     plot_mag_hist_data - If true, plot histogram values as well as cumulative magnitude values (Default is True) (bool)
+    fig - If specified, will plot data on this figure and return data this figure out. Default is None. (matplotlib fig object)
+    fig_data_colours - If specified, will allow user to specify the colours of the various data to plot in the figure.
+                        Takes the format: [<cum_binned_eq_Mw>, <raw_binned_eq_Mw>, <b-value_fit>, <Mc_line>].
+                        Default is: ['k', '#187A5B', '#1073A9', '#801C92'].
     fig_out_fname - The filename to save the output figure to. Default is empty string, which will result in not
                     saving to file. (str)
     min_max_mag_plot_lims - The lower and upper x-axis bounds (magnitude) for the output figure, with a list of length
@@ -336,17 +340,20 @@ def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=1
 
     # And plot, if specified:
     if plot_switch:
-        plt.figure(figsize=(8,6))
-        plt.scatter(Mw_bin_centres, pcdf, c='k', s=5, alpha=0.75)
+        if fig:
+            plt.gca()
+        else:
+            fig = plt.figure(figsize=(8,6))
+        plt.scatter(Mw_bin_centres, pcdf, c=fig_data_colours[0], s=5, alpha=0.75)
         if Mc_method=="KS":
             print(len(Mw_bin_centres_new_window), len(pcdf_new_window))
             plt.scatter(Mw_bin_centres_new_window, pcdf_new_window, c='b', s=5)
         if plot_mag_hist_data:
-            plt.scatter(Mw_bin_centres, Mw_hist, c='#187A5B', s=5)
+            plt.scatter(Mw_bin_centres, Mw_hist, c=fig_data_colours[1], s=5)
         x = np.array([Mw_c, bin_range[1]])
         y = 10.**( a - b*x )
-        plt.plot(x, y, label="a: "+str.format('{0:.2f}', a)+", b: "+str.format('{0:.2f}', b)+", Mc: "+str.format('{0:.2f}', Mw_c)+", Method: "+Mc_method, c='#1073A9')
-        plt.vlines(Mw_c, 1.0, np.max(pcdf), ls="--", color="#801C92")
+        plt.plot(x, y, label="a: "+str.format('{0:.2f}', a)+", b: "+str.format('{0:.2f}', b)+", Mc: "+str.format('{0:.2f}', Mw_c)+", Method: "+Mc_method, c=fig_data_colours[2])
+        plt.vlines(Mw_c, 1.0, np.max(pcdf), ls="--", color=fig_data_colours[3])
         plt.yscale('log')
         plt.xlabel('Magnitude')
         plt.ylabel('Cumulative number of events')
@@ -357,9 +364,13 @@ def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=1
         if len(fig_out_fname) > 0:
             print('Saving figure to',fig_out_fname)
             plt.savefig(fig_out_fname, dpi=300, transparent=True)
-        plt.show()
+        if not fig:
+            plt.show()
 
-    return a, b, Mw_c, b_err
+    if fig:
+        return a, b, Mw_c, b_err, fig
+    else:
+        return a, b, Mw_c, b_err
 
 
 def weighted_avg_and_std(values, weights=None):
