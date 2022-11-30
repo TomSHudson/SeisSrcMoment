@@ -494,6 +494,58 @@ def plot_summary_Gutenberg_Richter(pkl_data_fname, Q_filt=1000., upper_Mw_filt=4
     a, b, Mw_c, b_err = find_Mw_b_value(av_Mws, num_bins=200, Mc_method=Mc_method, sig_level=0.1, Nmin=10, plot_switch=True) #, Mw_err=av_Mws_err)
 
 
+def plot_manual_Gutenberg_Richter(Mw_arr, a_value, b_value, Mc, num_bins=200, fig_out_fname='', fig=None, fig_data_colours=['k', '#187A5B', '#1073A9', '#801C92']):
+    """Function to plot manually specified Gutenberg-Richter distribution of data for a given SeisSrcMoment 
+    catalogue dict file output.
+    
+    Arguments:
+    Required:
+    Mw_arr - Array of moment magnitudes to plot.
+    b_value - b-value to use for plotting.
+    Mc - Magnitude of completeness to use for plotting.
+
+    Returns:
+    Plot of the Gutenberg-Richter distribution for the specified catalogue.
+
+    """
+    # Calculate magnitude distribution statistics:
+    # Get a binned histogram of the Mw data:
+    bin_range=[np.min(Mw_arr), np.max(Mw_arr)+0.5] # The lower and upper magnitude ranges to bin (list of two floats)
+    bin_inc = (bin_range[1] - bin_range[0])/(2. * num_bins)
+    Mw_hist, Mw_bin_edges = np.histogram(Mw_arr, bins=num_bins, range=(bin_range[0]-bin_inc, bin_range[1]+bin_inc))
+    Mw_bin_centres = Mw_bin_edges[1:] - (Mw_bin_edges[1] - Mw_bin_edges[0])
+    # And find the cummulative magnitudes cumulative density function:
+    pcdf = get_cummulative_magnitude_dist(Mw_hist)
+
+    # And plot:
+    if fig:
+        plt.gca()
+    else:
+        fig = plt.figure(figsize=(8,6))
+    # Plot cummulative data:
+    plt.scatter(Mw_bin_centres, pcdf, c=fig_data_colours[0], s=5, alpha=0.75)
+    # Plot raw, uncumulative data:
+    plt.scatter(Mw_bin_centres, Mw_hist, c=fig_data_colours[1], s=5)
+    # Plot b-value line:
+    x = np.array([Mc, bin_range[1]])
+    y = 10.**( a_value - b_value*x )
+    plt.plot(x, y, c=fig_data_colours[2])
+    # Plot Mc:
+    plt.vlines(Mc, 1.0, np.max(pcdf), ls="--", color=fig_data_colours[3])
+    plt.yscale('log')
+    plt.xlabel('$M_w$')
+    plt.ylabel('Cumulative number of events')
+    # plt.xlim(-1.0, 3.5)
+    if len(fig_out_fname) > 0:
+        print('Saving figure to',fig_out_fname)
+        plt.savefig(fig_out_fname, dpi=300, transparent=True)
+    if not fig:
+        plt.show()
+    
+    # And return figure, if specified:
+    if fig:
+        return fig 
+
 
 def sort_nonlinloc_fnames_into_chrono_order(nonlinloc_fnames):
     """Function to sort list of nonlinloc fnames into chronological order.
