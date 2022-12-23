@@ -745,11 +745,16 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
         # 4. Append any data needed for multi-event analysis:
         # Check if 2 or more stations (as need >=2 stations for spectral ratios analysis),
         # and append if satisfied:
-        if len(event_inv_params.keys()) > 1:
-            all_event_inv_params[nonlinloc_event_hyp_filename] = event_inv_params.copy()
-        else:
+        try:
+            if len(event_inv_params.keys()) > 1:
+                all_event_inv_params[nonlinloc_event_hyp_filename] = event_inv_params.copy()
+            else:
+                print("Insufficient observations for spectral ratios, therefore skipping event", nonlinloc_event_hyp_filename)
+                del event_inv_params
+                continue
+        except UnboundLocalError:
+            # (if event_inv_params not created due to insufficient obs)
             print("Insufficient observations for spectral ratios, therefore skipping event", nonlinloc_event_hyp_filename)
-            del event_inv_params
             continue
 
         # 5. And prep. inversion structures and run inversion for single event (if method-1):
