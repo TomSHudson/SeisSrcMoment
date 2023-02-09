@@ -448,21 +448,28 @@ def get_displacement_spectra_coeffs(tr_disp, tr_noise_disp=None, plot_switch=Fal
                 param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp[1:], p0=p0, bounds=bounds)
         # Else if fails with noise corection, do without noise correction (and warn user):
         except RuntimeError:
-            if manual_fixed_t_star:
-                # Reduce bounds as not varying t-star:
-                bounds = ([bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]])
-                p0 = p0[0:2]
-                # Fit Brune model with reduced degrees of freedom (i.e. fixed t-star):
-                param, param_cov = curve_fit(lambda f, Sigma_0, f_c: Brune_model(f, Sigma_0, f_c, manual_fixed_t_star), freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=p0, bounds=bounds)
-                param = np.append(param, manual_fixed_t_star)
-                param_cov_tmp = np.zeros((3,3))
-                param_cov_tmp[0:2,0:2] = param_cov
-                param_cov = param_cov_tmp
-                del param_cov_tmp
+            if tr_noise_disp:
+                if manual_fixed_t_star:
+                    # Reduce bounds as not varying t-star:
+                    bounds = ([bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]])
+                    p0 = p0[0:2]
+                    # Fit Brune model with reduced degrees of freedom (i.e. fixed t-star):
+                    param, param_cov = curve_fit(lambda f, Sigma_0, f_c: Brune_model(f, Sigma_0, f_c, manual_fixed_t_star), freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=p0, bounds=bounds)
+                    param = np.append(param, manual_fixed_t_star)
+                    param_cov_tmp = np.zeros((3,3))
+                    param_cov_tmp[0:2,0:2] = param_cov
+                    param_cov = param_cov_tmp
+                    del param_cov_tmp
+                else:
+                    # Else fit Brune model with all parameters free:
+                    param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=p0, bounds=bounds)
+                print("Warning: Reverted to uncorrected displacement spectral fit for:",tr_disp.stats.station, ", due to potential issue with noise spectrum.")
             else:
-                # Else fit Brune model with all parameters free:
-                param, param_cov = curve_fit(Brune_model, freq_displacement[1:], disp_spect_amp_before_corr[1:], p0=p0, bounds=bounds)
-            print("Warning: Reverted to uncorrected displacement spectral fit for:",tr_disp.stats.station, ", due to potential issue with noise spectrum.")
+                print("Warning: Failed displacement spectral fit for:",tr_disp.stats.station, ", due to optimal fitting parameters not found.")
+                # Return nans:
+                param = np.full((3),np.nan)
+                param_cov = np.full((3,3),np.nan)
+
         # And get all key Brune fit parameters:
         Sigma_0 = param[0]
         f_c =  param[1]
