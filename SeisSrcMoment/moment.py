@@ -231,9 +231,9 @@ def remove_instrument_response(st, inventory_fname=None, instruments_gain_filena
             instruments_response_dict[station]["Z"] = {}
             instruments_response_dict[station]["N"] = {}
             instruments_response_dict[station]["E"] = {}
-            instruments_response_dict[station]["Z"]["overall_gain"] = np.float(instruments_gain_array[i,1])*np.float(instruments_gain_array[i,4]) # instrument x digitiliser gain
-            instruments_response_dict[station]["N"]["overall_gain"] = np.float(instruments_gain_array[i,2])*np.float(instruments_gain_array[i,5]) # instrument x digitiliser gain
-            instruments_response_dict[station]["E"]["overall_gain"] = np.float(instruments_gain_array[i,3])*np.float(instruments_gain_array[i,6]) # instrument x digitiliser gain
+            instruments_response_dict[station]["Z"]["overall_gain"] = float(instruments_gain_array[i,1])*float(instruments_gain_array[i,4]) # instrument x digitiliser gain
+            instruments_response_dict[station]["N"]["overall_gain"] = float(instruments_gain_array[i,2])*float(instruments_gain_array[i,5]) # instrument x digitiliser gain
+            instruments_response_dict[station]["E"]["overall_gain"] = float(instruments_gain_array[i,3])*float(instruments_gain_array[i,6]) # instrument x digitiliser gain
             
         # And loop over stream, correcting for instrument gain response on each station and channel:
         for j in range(len(st_out)):
