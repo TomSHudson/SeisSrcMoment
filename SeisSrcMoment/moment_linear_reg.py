@@ -33,7 +33,8 @@ import math
 import pickle
 from scipy.optimize import curve_fit, lsq_linear 
 from sklearn import linear_model # For solving linear path regression inversion 
-from mtspec import mtspec # For multi-taper spectral analysis
+# from mtspec import mtspec # For multi-taper spectral analysis
+from multitaper import MTSpec # (new, suported Prieto2022 package)
 from NonLinLocPy import read_nonlinloc # For reading NonLinLoc data (can install via pip)
 import SeisSrcMoment.moment as moment # Imports moment package from SeisSrcMoment directory
 
@@ -639,13 +640,26 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
             # 3.b. Get displacement spectrum for current station:
             # Get spectra of displacement (using multi-taper spectral analysis method):
             # (See: Thomson1982, Park1987, Prieto2009, Pozgay2009a for further details)
-            Pxx, freq_displacement = mtspec(tr_disp.data, delta=1./tr_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+            # Pxx, freq_displacement = mtspec(tr_disp.data, delta=1./tr_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+            # (Now use python implementation of Prieto2022)
+            mtspec_obj = MTSpec(tr_disp.data, nw=2, kspec=5, dt=1./tr_disp.stats.sampling_rate) # (nw = time-bandwidth product, kspec=number of tapers)
+            freq_displacement, Pxx = mtspec_obj.rspec()
+            freq_displacement, Pxx = freq_displacement.flatten(), Pxx.flatten()
+            freq_displacement, Pxx = freq_displacement[::2], Pxx[::2] # (Downsample to match mtspec package output)
+            del mtspec_obj
+            gc.collect()
             Axx_disp = np.sqrt(Pxx)
             # Remove noise, if tr_noise specified:
             if remove_noise_spectrum:
                 if len(tr_noise_disp.data) == len(tr_disp.data):
                     # And get noise spectrum:
-                    Pxx_noise, freq_displacement_noise = mtspec(tr_noise_disp.data, delta=1./tr_noise_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+                    # Pxx_noise, freq_displacement_noise = mtspec(tr_noise_disp.data, delta=1./tr_noise_disp.stats.sampling_rate, time_bandwidth=2, number_of_tapers=5)
+                    mtspec_obj = MTSpec(tr_noise_disp.data, nw=2, kspec=5, dt=1./tr_noise_disp.stats.sampling_rate) # (nw = time-bandwidth product, kspec=number of tapers)
+                    freq_displacement_noise, Pxx_noise = mtspec_obj.rspec()
+                    freq_displacement_noise, Pxx_noise = freq_displacement_noise.flatten(), Pxx_noise.flatten()
+                    freq_displacement_noise, Pxx_noise = freq_displacement_noise[::2], Pxx_noise[::2] # (Downsample to match mtspec package output)
+                    del mtspec_obj
+                    gc.collect()
                     disp_spect_amp_noise = np.sqrt(Pxx_noise)
                     # And remove noise spectrum:
                     disp_spect_amp_no_noise = disp_spect_amp - disp_spect_amp_noise
