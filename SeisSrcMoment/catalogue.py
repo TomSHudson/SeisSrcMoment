@@ -44,7 +44,7 @@ def find_nearest_idx(array, value):
     return idx, array[idx]
 
 
-def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_list, mseed_dir, out_fname, window_before_after, filt_freqs, density, Vp, phase_to_process='P', MT_six_tensor=[], stations_not_to_process=[], inventory_fname=None, instruments_gain_filename=None, remove_noise_spectrum=False, vel_model_df=[], efficient_hr_mseed_read=False, verbosity_level=0, plot_switch=False):
+def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_list, mseed_dir, out_fname, window_before_after, filt_freqs, density, Vp, phase_to_process='P', MT_six_tensor=[], stations_not_to_process=[], inventory_fname=None, instruments_gain_filename=None, remove_noise_spectrum=False, vel_model_df=[], efficient_hr_mseed_read=False, archive_vs_cut_mseed="archive", verbosity_level=0, plot_switch=False):
     """Function to find the event moment magnitudes for a specified list of NonLinLoc relocated 
     earthquakes. Outputs a python dictionary to file containing all the event magnitude catalogue 
     information for all the earthquakes. This is saved to <out_fname>.
@@ -65,8 +65,14 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
                                 files. (str)
     nonlinloc_hyp_files_list - List of the NonLinLoc hyp filenames to process. These must be within
                                 nonlinloc_hyp_files_dir. (list of strs)
-    mseed_dir - Path to the overall continuous mseed archive directory <archive>, where the archive 
-                is in the format: <archive>/years/julday/year_julday_station_*.m . (str)
+    mseed_dir - Path to the seismic data.
+                If <archive_vs_cut_mseed> = "archive":
+                overall continuous mseed archive directory <archive>, where the archive 
+                is in the format: <archive>/years/julday/year_julday_station_*.m . 
+                Else if <archive_vs_cut_mseed> = "cut_mseed":
+                Path to directory containing cut mseed files for each event, named as event_uids 
+                corresponding to nonlinloc obs filenames.
+                (str)
     out_fname - The filename of the python dictionary output by this function. The data is saved 
                 pickled and can be read using pickle or the inbuilt function in this module 
                 read_magnitude_catalogue(). (str)
@@ -111,6 +117,11 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
     efficient_hr_mseed_read - If True, efficiently reads mseed data. Assumes mseed in 
                     archive in hour splits, with the format: 
                     <YEAR><JULDAY>_<HOUR>0000_<STATION>_<CHANNEL>.m*
+    archive_vs_cut_mseed - If = "archive" (default), then reads archived mseed data in the format:
+                        <archive>/years/julday/year_julday_station_*.m.
+                        Else if = "cut_mseed", then reads cut mseed defined by event UID from 
+                        nonlinloc file.
+                        (str)
     verbosity_level - Verbosity level (1 for moment only) (2 for major parameters) (3 for 
                     plotting of traces). Defualt = 0. (int)
     plot_switch - If True, plots out displacement spectra and Brune model fits. (bool)
@@ -133,24 +144,33 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
         stations_to_calculate_moment_for = list(nonlinloc_event_hyp_data.phase_data.keys())
         
         # 2. Get stream to pass to calc_moment:
-        if efficient_hr_mseed_read:
-            mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), 
-                                            "*_"+str(event_origin_time.hour).zfill(2)+"0000_*.m*")
-        else:
-            mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m*")
-        st = obspy.core.Stream()
-        for fname in glob.glob(mseed_filename):
-            try:
-                st_tmp = moment.load_mseed(fname, filt_freqs=filt_freqs)
-            except TypeError:
-                continue
-            for i in range(len(st_tmp)):
+        if archive_vs_cut_mseed == "archive":
+            if efficient_hr_mseed_read:
+                mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), 
+                                                "*_"+str(event_origin_time.hour).zfill(2)+"0000_*.m*")
+            else:
+                mseed_filename = os.path.join(mseed_dir, str(event_origin_time.year).zfill(4), str(event_origin_time.julday).zfill(3), "*.m*")
+            st = obspy.core.Stream()
+            for fname in glob.glob(mseed_filename):
                 try:
-                    st.append(st_tmp[i])
-                    del st_tmp
-                    gc.collect()
-                except UnboundLocalError:
-                    continue      
+                    st_tmp = moment.load_mseed(fname, filt_freqs=filt_freqs)
+                except TypeError:
+                    continue
+                for i in range(len(st_tmp)):
+                    try:
+                        st.append(st_tmp[i])
+                        del st_tmp
+                        gc.collect()
+                    except UnboundLocalError:
+                        continue      
+        elif archive_vs_cut_mseed == "cut_mseed":
+            mseed_filename = os.path.join(mseed_dir, nonlinloc_event_hyp_data.obs_fname.split('.')[0]+"*")
+            st = obspy.read(mseed_filename)
+        else:
+            print("<archive_vs_cut_mseed> must be either archive or cut_mseed. It is currently neither, therefore exiting.")
+            sys.exit()
+
+
 
         # 3. Get Vp from velocity model, if specified:
         if Vp == 'from_depth':
