@@ -363,7 +363,7 @@ def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=1
         if fig:
             plt.gca()
         else:
-            fig = plt.figure(figsize=(8,6))
+            fig_tmp = plt.figure(figsize=(8,6))
         plt.scatter(Mw_bin_centres, pcdf, c=fig_data_colours[0], s=5, alpha=0.75)
         if Mc_method=="KS":
             print(len(Mw_bin_centres_new_window), len(pcdf_new_window))
