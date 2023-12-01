@@ -245,6 +245,7 @@ def find_Mw_b_value(Mw_arr, num_bins=200, Mc_method="BVS", sig_level=0.1, Nmin=1
     Returns:
     a, b - Gutenberg-Richter values.
     Mw_c - The magnitude of completeness found using the specified Mc method and significance confidence level.
+    b_err - The estimated error in b-value.
     If specified, a plot of teh Gutenberg-Richter distribution for the input magnitudes array."""
     # Specify any initial parameters:
     error_count = 0
