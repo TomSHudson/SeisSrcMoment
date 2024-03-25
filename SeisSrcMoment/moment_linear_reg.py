@@ -347,6 +347,7 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
         f_c_stdev = np.sqrt(param_cov[1,1])
         Q_stdev = 0. # Note that currently, do not calculate this value
         t_star_stdev = 0. # Note that currently, do not calculate this value
+
         # Calculate moment for current station:
         r_m = event_inv_params[station_keys[ii]]['r_m']
         if type(A_rad_point) is not float:
