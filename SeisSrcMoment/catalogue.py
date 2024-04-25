@@ -44,7 +44,7 @@ def find_nearest_idx(array, value):
     return idx, array[idx]
 
 
-def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_list, mseed_dir, out_fname, window_before_after, filt_freqs, density, Vp, phase_to_process='P', MT_six_tensor=[], stations_not_to_process=[], inventory_fname=None, instruments_gain_filename=None, remove_noise_spectrum=False, vel_model_df=[], efficient_hr_mseed_read=False, archive_vs_cut_mseed="archive", verbosity_level=0, plot_switch=False):
+def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_list, mseed_dir, out_fname, window_before_after, filt_freqs, density, Vp, phase_to_process='P', MT_six_tensor=[], stations_not_to_process=[], inventory_fname=None, instruments_gain_filename=None, remove_noise_spectrum=False, vel_model_df=[], efficient_hr_mseed_read=False, archive_vs_cut_mseed="archive", return_spectra_data=False, verbosity_level=0, plot_switch=False):
     """Function to find the event moment magnitudes for a specified list of NonLinLoc relocated 
     earthquakes. Outputs a python dictionary to file containing all the event magnitude catalogue 
     information for all the earthquakes. This is saved to <out_fname>.
@@ -122,6 +122,7 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
                         Else if = "cut_mseed", then reads cut mseed defined by event UID from 
                         nonlinloc file.
                         (str)
+    return_spectra_data - If True, returns displacement spectrum data to output dict. Default is False. (bool)
     verbosity_level - Verbosity level (1 for moment only) (2 for major parameters) (3 for 
                     plotting of traces). Defualt = 0. (int)
     plot_switch - If True, plots out displacement spectra and Brune model fits. (bool)
@@ -189,7 +190,7 @@ def get_event_moment_magnitudes(nonlinloc_hyp_files_dir, nonlinloc_hyp_files_lis
                 sys.exit()
 
         # 4. Get seismic moment:
-        seis_moment, std_err_seis_M_0, n_obs, event_obs_dict = moment.calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process=phase_to_process, inventory_fname=inventory_fname, instruments_gain_filename=instruments_gain_filename, window_before_after=window_before_after, filt_freqs=filt_freqs, stations_not_to_process=stations_not_to_process, MT_six_tensor=MT_six_tensor, st=st, remove_noise_spectrum=remove_noise_spectrum, verbosity_level=verbosity_level, plot_switch=plot_switch)
+        seis_moment, std_err_seis_M_0, n_obs, event_obs_dict = moment.calc_moment(mseed_filename, NLLoc_event_hyp_filename, stations_to_calculate_moment_for, density, Vp, phase_to_process=phase_to_process, inventory_fname=inventory_fname, instruments_gain_filename=instruments_gain_filename, window_before_after=window_before_after, filt_freqs=filt_freqs, stations_not_to_process=stations_not_to_process, MT_six_tensor=MT_six_tensor, st=st, remove_noise_spectrum=remove_noise_spectrum, return_spectra_data=return_spectra_data, verbosity_level=verbosity_level, plot_switch=plot_switch)
         # Calculate average Mw from all M_0 measurements:
         M_ws_tmp = []
         for station_tmp in list(event_obs_dict.keys()):
