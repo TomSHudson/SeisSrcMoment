@@ -309,7 +309,7 @@ def run_linear_moment_inv(X, y, inv_option, all_event_inv_params, n_cpu=-1, verb
     
     return linear_moment_inv_outputs
 
-def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0):
+def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_rad_point, surf_inc_angle_rad=0., return_spectra_data=False, verbosity_level=0):
     """Function to calculate fc by fitting Brune model to spectra with fixed Q."""
     # Calculate f_c based on curve-fit of spectra with Brune model for fixed Q:
     # Setup some data outputs for current event:
@@ -325,7 +325,7 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
             fixed_t_star = event_inv_params[station_keys[ii]]['tt_s'] / manual_fixed_Q
             bounds = ([0, event_inv_params[station_keys[ii]]['freq'][1]], [np.inf, event_inv_params[station_keys[ii]]['freq'][-1]])
             # Tweek amplitudes to improve least-squares fitting, and then reset:
-            disp_spect_amp_tmp = event_inv_params[station_keys[ii]]['Axx_disp'][1:] * (10**9)
+            disp_spect_amp_tmp = event_inv_params[station_keys[ii]]['Axx_disp'][1:] * (10**9) # (Note: 10**9 is just to boost numbers to be closer to 1 for lsqs inv below (?))
             param, param_cov = curve_fit(lambda f, Sigma_0, f_c: moment.Brune_model(f, Sigma_0, f_c, fixed_t_star), event_inv_params[station_keys[ii]]['freq'][1:], disp_spect_amp_tmp, p0=[np.max(disp_spect_amp_tmp), 10.], bounds=bounds)
             param[0] = param[0] / (10**9)
             # And if f_c inversion failed to resolve f_c:
@@ -373,6 +373,15 @@ def calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp, A_r
         event_obs_dict[station_keys[ii]]['f_c_stdev'] = f_c_stdev
         event_obs_dict[station_keys[ii]]['t_star_stdev'] = t_star_stdev
         event_obs_dict[station_keys[ii]]['Q_stdev'] = Q_stdev
+        # And append spectra, if specified:
+        if return_spectra_data:
+            event_obs_dict[station_keys[ii]]['spect_data_dict'] = {}
+            event_obs_dict[station_keys[ii]]['spect_data_dict']['mtspec_disp_spectrum'] = {}
+            event_obs_dict[station_keys[ii]]['spect_data_dict']['mtspec_disp_spectrum']['f'] = event_inv_params[station_keys[ii]]['freq'][1:]
+            event_obs_dict[station_keys[ii]]['spect_data_dict']['mtspec_disp_spectrum']['A'] = event_inv_params[station_keys[ii]]['Axx_disp'][1:]
+            event_obs_dict[station_keys[ii]]['spect_data_dict']['Brune_model_fit_spectrum'] = {}
+            event_obs_dict[station_keys[ii]]['spect_data_dict']['Brune_model_fit_spectrum']['f'] = event_inv_params[station_keys[ii]]['freq'][1:]
+            event_obs_dict[station_keys[ii]]['spect_data_dict']['Brune_model_fit_spectrum']['A'] = moment.Brune_model(event_inv_params[station_keys[ii]]['freq'][1:], Sigma_0, f_c, t_star)
 
     if verbosity_level > 1:
         Qs_tmp = []
@@ -792,7 +801,7 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
             # And find fc from fixed Q:
             Qs_curr_event = linear_moment_inv_outputs[nonlinloc_event_hyp_filename]["Qs"]
             try:
-                event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp_curr, A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+                event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vp_curr, A_rad_point, surf_inc_angle_rad=0., return_spectra_data=return_spectra_data, verbosity_level=0)
             except RuntimeError:
                 print("Warning: RuntimeError, where fitting Brune model did not converge. Skipping event.")
                 continue
@@ -818,7 +827,7 @@ def calc_moment_via_linear_reg(nonlinloc_event_hyp_filenames, density, Vp, mseed
                         Qs_curr_event = linear_moment_inv_outputs[event_key]["Qs"]
                         if inv_option == "method-3" or inv_option == "method-4":
                             A_rad_point = linear_moment_inv_outputs[event_key]["Rs"] / ( 2. * np.cos(surf_inc_angle_rad) )
-                        event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vps[count_tmp], A_rad_point, surf_inc_angle_rad=0., verbosity_level=0)
+                        event_obs_dict = calc_fc_from_fixed_Q_Brune(event_inv_params, Qs_curr_event, density, Vps[count_tmp], A_rad_point, surf_inc_angle_rad=0., return_spectra_data=return_spectra_data, verbosity_level=0)
                         # And append data for event, for outputing:
                         event_obs_dicts[event_key] = event_obs_dict
                         count_tmp += 1
